@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "slug": "bebek",
+      "title": "Bebek Çekimleri",
+      "description": "Yenidoğan ve bebeklerin masum, huzurlu anlarını sıcacık karelerle ölümsüzleştiriyorum.",
+      "images": [
+        { "id": "bebek-1", "caption": "İlk uyku", "orientation": "portrait" },
+        { "id": "bebek-2", "caption": "Minik eller", "orientation": "landscape" },
+        { "id": "bebek-3", "caption": "Huzur", "orientation": "portrait" },
+        { "id": "bebek-4", "caption": "Anne kucağı", "orientation": "landscape" },
+        { "id": "bebek-5", "caption": "İlk gülümseme", "orientation": "portrait" },
+        { "id": "bebek-6", "caption": "Yumuşacık", "orientation": "portrait" },
+        { "id": "bebek-7", "caption": "Meraklı bakışlar", "orientation": "landscape" },
+        { "id": "bebek-8", "caption": "Tatlı rüyalar", "orientation": "portrait" }
+      ]
+    },
+    {
+      "slug": "dogum",
+      "title": "Doğum Fotoğrafçılığı",
+      "description": "Hayatın başladığı o eşsiz anı, ilk buluşmanın yoğun duygusunu saygıyla belgeliyorum.",
+      "images": [
+        { "id": "dogum-1", "caption": "İlk nefes", "orientation": "landscape" },
+        { "id": "dogum-2", "caption": "İlk buluşma", "orientation": "portrait" },
+        { "id": "dogum-3", "caption": "Gözyaşları", "orientation": "landscape" },
+        { "id": "dogum-4", "caption": "Ten teması", "orientation": "portrait" },
+        { "id": "dogum-5", "caption": "Yeni bir aile", "orientation": "landscape" },
+        { "id": "dogum-6", "caption": "İlk dokunuş", "orientation": "portrait" },
+        { "id": "dogum-7", "caption": "Sonsuz sevgi", "orientation": "landscape" },
+        { "id": "dogum-8", "caption": "Hoş geldin", "orientation": "portrait" }
+      ]
+    },
+    {
+      "slug": "hamile",
+      "title": "Hamile Çekimleri",
+      "description": "Bekleyişin zarafetini; zarif ışık, doğal pozlar ve size özel konseptlerle yansıtıyorum.",
+      "images": [
+        { "id": "hamile-1", "caption": "Bekleyiş", "orientation": "portrait" },
+        { "id": "hamile-2", "caption": "Zarafet", "orientation": "portrait" },
+        { "id": "hamile-3", "caption": "Doğa içinde", "orientation": "landscape" },
+        { "id": "hamile-4", "caption": "İki kalp", "orientation": "portrait" },
+        { "id": "hamile-5", "caption": "Altın saat", "orientation": "landscape" },
+        { "id": "hamile-6", "caption": "Sükunet", "orientation": "portrait" },
+        { "id": "hamile-7", "caption": "Anne olmak", "orientation": "portrait" },
+        { "id": "hamile-8", "caption": "Işık ve gölge", "orientation": "landscape" }
+      ]
+    },
+    {
+      "slug": "dugun",
+      "title": "Düğün Çekimleri",
+      "description": "Düğün gününüzün coşkusunu ve zarafetini hikâye anlatan zamansız karelerle yakalıyorum.",
+      "images": [
+        { "id": "dugun-1", "caption": "İlk dans", "orientation": "landscape" },
+        { "id": "dugun-2", "caption": "Söz", "orientation": "portrait" },
+        { "id": "dugun-3", "caption": "Gelin hazırlığı", "orientation": "portrait" },
+        { "id": "dugun-4", "caption": "Mutluluk", "orientation": "landscape" },
+        { "id": "dugun-5", "caption": "El ele", "orientation": "portrait" },
+        { "id": "dugun-6", "caption": "Kutlama", "orientation": "landscape" },
+        { "id": "dugun-7", "caption": "Zarafet", "orientation": "portrait" },
+        { "id": "dugun-8", "caption": "Sonsuza dek", "orientation": "landscape" }
+      ]
+    }
+  ]
+}

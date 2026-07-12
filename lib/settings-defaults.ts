@@ -1,0 +1,82 @@
+import type { SiteSettings } from "@/lib/settings";
+
+export const defaultSettings: SiteSettings = {
+  general: {
+    name: "Mrs. Yılmaz Visuals",
+    tagline: "Anların en zarif hali",
+    description:
+      "Doğum, hamile, yenidoğan ve bebek çekimlerinde samimi ve güven veren bir deneyim sunuyorum. 2016'dan beri fotoğrafçılık yapıyor; 2019'dan itibaren doğum fotoğrafçılığına odaklanıyorum.",
+    author: "Melike Yılmaz",
+    profileImage: "/images/melike-yilmaz.jpg",
+    url: "https://mrsyilmazvisuals.com",
+  },
+  contact: {
+    location: "Üsküdar, İstanbul",
+    workingHours: "Randevu ile — Instagram veya form üzerinden ulaşabilirsiniz",
+    instagramHandle: "@mrs.yilmaz.visuals",
+    instagramUrl: "https://www.instagram.com/mrs.yilmaz.visuals/",
+    pageTitle: "Hadi tanışalım",
+    pageDescription:
+      "Çekim planınız, sorularınız veya randevu talebiniz için formu doldurun ya da Instagram üzerinden doğrudan yazın. En kısa sürede dönüş yaparım.",
+    formNote:
+      "Formu doldurun; mesajınız bana ulaşsın. Daha hızlı iletişim için Instagram'dan da yazabilirsiniz.",
+  },
+  about: {
+    pageDescription:
+      "Doğum, hamile, yenidoğan ve bebek çekimlerinde ailelerin en değerli anlarını samimi, rahat ve güven veren bir ortamda ölümsüzleştiriyorum.",
+    bioParagraphs: [
+      "Ben Melike Yılmaz. 2016'dan beri profesyonel fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, hamile, yenidoğan ve bebek çekimlerine odaklandım. Her çekimde önce sizinle tanışıyor, süreci birlikte planlıyor ve rahat hissetmenizi sağlıyorum.",
+      "Doğum fotoğrafçılığında Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalıyım. Doğum öncesinde ailelerle iletişim kurmayı, herkesin hazır ve huzurlu olmasını önemsiyorum — çünkü en güzel kareler, güvende hissedildiğiniz anlarda doğar.",
+      "Samimi, doğal ve poz vermekten çok gerçek duyguları yakalamayı seviyorum. Yıllar içinde birçok ailemle kalıcı dostluklar kurduk. Birlikte, yıllar sonra bile aynı duyguyu hissettirecek kareler yaratacağız.",
+    ],
+    previewParagraphs: [
+      "2016'dan beri fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, hamile, yenidoğan ve bebek çekimlerine odaklandım. Çekim öncesinde iletişim kurmayı, samimi ve rahat bir ortam oluşturmayı önemsiyorum.",
+      "Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalı doğum fotoğrafçısıyım. Amacım, yıllar sonra baktığınızda o günün duygusunu yeniden hissettirecek kareler bırakmak.",
+    ],
+    timeline: [
+      {
+        year: "2016",
+        title: "Profesyonel fotoğrafçılık",
+        text: "Fotoğrafçılık tutkusunu profesyonel bir kariyere dönüştürdüm.",
+      },
+      {
+        year: "2019",
+        title: "Doğum fotoğrafçılığı",
+        text: "Doğum, hamile ve yenidoğan çekimlerine odaklanarak bu alanda uzmanlaştım.",
+      },
+      {
+        year: "2021",
+        title: "Hastane sertifikasyonları",
+        text: "Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalı doğum fotoğrafçısı oldum.",
+      },
+      {
+        year: "2024",
+        title: "Mrs. Yılmaz Visuals",
+        text: "Samimi ve güven veren çekim anlayışıyla yüzlerce aileye eşlik ettim; birçok ailemle kalıcı dostluklar kurduk.",
+      },
+    ],
+    values: [
+      {
+        title: "Samimiyet",
+        text: "Poz vermekten çok, gerçek duyguları ve doğal anları yakalamayı severim. Çekimlerimizde rahat hissetmeniz benim için en önemli şey.",
+      },
+      {
+        title: "İletişim",
+        text: "Özellikle doğum çekimlerinde, çekim öncesinde ailelerle detaylı iletişim kurarak herkesin hazır ve huzurlu olmasını sağlarım.",
+      },
+      {
+        title: "Güven",
+        text: "Hastane doğumlarında sertifikalı deneyimimle, bebek ve yenidoğan çekimlerinde ise güvenlik ve konforu her şeyin önünde tutarım.",
+      },
+    ],
+  },
+  home: {
+    servicesEyebrow: "Hizmetler",
+    servicesTitle: "Her an için özel bir dokunuş",
+    servicesDescription:
+      "Doğumdan düğüne, bebekten hamileliğe — hikâyenizi anlatan zamansız kareler oluşturuyorum.",
+    ctaTitle: "Anılarınızı birlikte ölümsüzleştirelim",
+    ctaDescription:
+      "Size özel bir çekim planlamak veya müsaitlik durumunu öğrenmek için hemen iletişime geçin.",
+  },
+};
