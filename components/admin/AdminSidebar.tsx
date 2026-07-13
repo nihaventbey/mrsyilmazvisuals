@@ -10,6 +10,7 @@ const adminLinks = [
   { href: "/admin/ayarlar", label: "Site Ayarları" },
   { href: "/admin/hero", label: "Hero Kartları" },
   { href: "/admin/instagram", label: "Instagram" },
+  { href: "/admin/reklamlar", label: "Reklamlar" },
   { href: "/admin/cekilis", label: "Çekiliş" },
   { href: "/admin/kategoriler", label: "Kategoriler" },
   { href: "/admin/portfolyo", label: "Portfolyo" },

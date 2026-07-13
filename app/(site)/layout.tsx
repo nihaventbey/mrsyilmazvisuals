@@ -5,6 +5,7 @@ import {
 } from "@/lib/settings";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AdSenseScript } from "@/components/ads/AdSenseScript";
 
 export default async function SiteLayout({
   children,
@@ -19,6 +20,7 @@ export default async function SiteLayout({
 
   return (
     <>
+      <AdSenseScript />
       <Header siteName={config.name} logoSrc={config.logoImage} />
       <main className="flex-1">{children}</main>
       <Footer

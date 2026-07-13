@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { BlogCard } from "@/components/blog/BlogCard";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { getBlogPosts } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -22,6 +23,8 @@ export default async function BlogPage() {
         title="İlham & Rehber"
         description="Çekim hazırlığından konsept fikirlerine, deneyimlerimi ve önerilerimi sizinle paylaşıyorum."
       />
+
+      <AdSlot slot="blogIndex" className="-mt-4 sm:-mt-6" />
 
       <section className="container-page py-20">
         {posts.length === 0 ? (

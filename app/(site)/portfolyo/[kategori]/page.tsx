@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Gallery } from "@/components/portfolio/Gallery";
+import { AdSlot } from "@/components/ads/AdSlot";
 import {
   getPortfolioCategories,
   getPortfolioCategory,
@@ -59,6 +60,8 @@ export default async function CategoryPage({
       <section className="container-page py-20">
         <Gallery images={category.images} />
       </section>
+
+      <AdSlot slot="portfolioAfterGallery" />
 
       <section className="border-t border-espresso/10 bg-sand/40 py-16">
         <div className="container-page text-center">

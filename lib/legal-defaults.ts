@@ -115,10 +115,11 @@ export const defaultLegalSettings: LegalSettings = {
     },
     {
       id: "cookies",
-      title: "Çerezler",
+      title: "Çerezler ve Reklamlar",
       paragraphs: [
         "Site; oturum yönetimi, güvenlik ve temel işlevsellik için zorunlu çerezler kullanabilir.",
-        "Reklam, davranışsal izleme veya üçüncü taraf profilleme çerezleri kullanılmamaktadır.",
+        "Google AdSense etkinleştirildiğinde, Google reklam ve ölçüm çerezleri kullanabilir. Bu çerezler reklamların gösterilmesi, frekans sınırlama ve temel analiz için işlenebilir. AdSense ayarları yönetici panelinden kapatıldığında ilgili üçüncü taraf reklam kodu yüklenmez.",
+        "Tarayıcı ayarlarınızdan çerezleri sınırlayabilir veya engelleyebilirsiniz; bazı site işlevleri etkilenebilir.",
       ],
     },
     {

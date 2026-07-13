@@ -59,6 +59,7 @@ export async function proxy(request: NextRequest) {
     pathname === "/robots.txt" ||
     pathname === "/llms.txt" ||
     pathname === "/sitemap.xml" ||
+    pathname === "/ads.txt" ||
     pathname.startsWith("/.well-known/") ||
     pathname === "/api/site-markdown";
   const supabaseConfigured =

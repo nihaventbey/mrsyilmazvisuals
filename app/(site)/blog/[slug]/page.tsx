@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { Button } from "@/components/ui/Button";
+import { AdSlot } from "@/components/ads/AdSlot";
 import {
   formatDate,
   getBlogPost,
@@ -105,11 +106,12 @@ export default async function BlogPostPage({
         />
       </div>
 
-      <div className="container-page mt-12 max-w-3xl pb-16">
+      <div className="container-page mt-12 max-w-3xl pb-8">
         <div
           className="prose-content"
           dangerouslySetInnerHTML={{ __html: post.html }}
         />
+        <AdSlot slot="blogAfterPost" bare className="mt-10" />
       </div>
 
       <div className="border-t border-espresso/10 bg-sand/40 py-16">

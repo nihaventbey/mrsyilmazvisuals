@@ -20,6 +20,11 @@ import {
   normalizeInstagramUsername,
   slugifyGiveawayTitle,
 } from "@/lib/giveaways";
+import {
+  ADSENSE_SLOT_META,
+  normalizePublisherId,
+  type AdSenseSlotId,
+} from "@/lib/adsense-defaults";
 
 // ================================ auth =================================
 
@@ -76,6 +81,7 @@ function revalidateSite() {
     "/cekilis",
     "/bakim",
     "/gizlilik-politikasi",
+    "/ads.txt",
   ]) {
     revalidatePath(p, "layout");
   }
@@ -1070,4 +1076,59 @@ export async function deleteGiveaway(formData: FormData): Promise<void> {
   revalidateSite();
   revalidatePath("/admin/cekilis");
   revalidatePath("/sitemap.xml");
+}
+
+// ============================== adsense ================================
+
+export async function saveAdSenseSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const slotIds = Object.keys(ADSENSE_SLOT_META) as AdSenseSlotId[];
+
+  const publisherId = normalizePublisherId(
+    String(formData.get("publisher_id") ?? ""),
+  );
+  const enabled = formData.get("enabled") === "true";
+
+  if (enabled && !publisherId) {
+    return {
+      status: "error",
+      message: "AdSense açıkken Publisher ID zorunludur (ca-pub-…).",
+    };
+  }
+
+  const slots: Record<string, { enabled: boolean; slotId: string }> = {};
+  for (const id of slotIds) {
+    const slotEnabled = formData.get(`slot_${id}_enabled`) === "true";
+    const slotId = String(formData.get(`slot_${id}_id`) ?? "").trim();
+    if (slotEnabled && !slotId) {
+      return {
+        status: "error",
+        message: `${ADSENSE_SLOT_META[id].label} etkin; Slot ID girin.`,
+      };
+    }
+    slots[id] = { enabled: slotEnabled, slotId };
+  }
+
+  try {
+    await upsertSetting(supabase, "adsense", {
+      enabled,
+      publisherId,
+      testMode: formData.get("test_mode") === "true",
+      slots,
+    });
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/reklamlar");
+  revalidatePath("/ads.txt");
+  revalidatePath("/gizlilik-politikasi");
+  return { status: "success", message: "AdSense ayarları kaydedildi." };
 }

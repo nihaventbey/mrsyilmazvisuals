@@ -3,6 +3,7 @@ import Link from "next/link";
 import { isMaintenanceActive } from "@/lib/maintenance";
 import { getLegalSettings } from "@/lib/legal";
 import { getSiteConfig } from "@/lib/settings";
+import { getAdSenseSettings } from "@/lib/adsense";
 import { absoluteUrl } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,10 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPolicyPage() {
-  const [config, legal, maintenanceActive] = await Promise.all([
+  const [config, legal, maintenanceActive, adsense] = await Promise.all([
     getSiteConfig(),
     getLegalSettings(),
     isMaintenanceActive(),
+    getAdSenseSettings(),
   ]);
 
   const updatedAt = new Date(legal.privacyUpdatedAt).toLocaleDateString("tr-TR", {
@@ -100,6 +102,26 @@ export default async function PrivacyPolicyPage() {
               )}
             </section>
           ))}
+
+          {adsense.enabled && adsense.publisherId ? (
+            <section>
+              <h2>Google AdSense</h2>
+              <p>
+                Bu sitede Google AdSense reklam programı kullanılmaktadır
+                (Publisher: <code>{adsense.publisherId}</code>). Google;
+                cihaz bilgisi, yaklaşık konum ve çerezler aracılığıyla reklam
+                deneyimini kişiselleştirebilir veya ölçebilir. Ayrıntılar için{" "}
+                <a
+                  href="https://policies.google.com/technologies/ads"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google reklam teknolojileri
+                </a>{" "}
+                sayfasına bakabilirsiniz.
+              </p>
+            </section>
+          ) : null}
 
           <h2>İletişim</h2>
           <p>
