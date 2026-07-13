@@ -1,8 +1,11 @@
 import type { SiteConfig, SocialLink } from "@/lib/settings";
+import { toWhatsAppDigits } from "@/lib/whatsapp";
 
 export function absoluteUrl(path: string, baseUrl: string): string {
   const base = baseUrl.replace(/\/$/, "");
-  return path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  return path.startsWith("http")
+    ? path
+    : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export function buildOrganizationJsonLd(
@@ -10,10 +13,18 @@ export function buildOrganizationJsonLd(
   socialLinks: SocialLink[],
 ) {
   const sameAs = socialLinks.map((link) => link.href).filter(Boolean);
+  if (config.whatsappUrl) {
+    sameAs.push(config.whatsappUrl.split("?")[0]!);
+  }
+
+  const digits = config.whatsappPhone
+    ? toWhatsAppDigits(config.whatsappPhone)
+    : null;
+  const telephone = digits ? `+${digits}` : undefined;
 
   return {
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
+    "@type": ["ProfessionalService", "LocalBusiness"],
     "@id": `${config.url}/#organization`,
     name: config.name,
     alternateName: config.author,
@@ -21,10 +32,21 @@ export function buildOrganizationJsonLd(
     url: config.url,
     image: absoluteUrl(config.logoImage, config.url),
     logo: absoluteUrl(config.logoImage, config.url),
-    areaServed: {
-      "@type": "City",
-      name: "İstanbul",
-    },
+    ...(telephone ? { telephone } : {}),
+    areaServed: [
+      {
+        "@type": "AdministrativeArea",
+        name: "Ankara",
+      },
+      {
+        "@type": "Place",
+        name: "Gölbaşı, Ankara",
+      },
+      {
+        "@type": "City",
+        name: "İstanbul",
+      },
+    ],
     address: {
       "@type": "PostalAddress",
       addressLocality: config.location,
@@ -39,7 +61,9 @@ export function buildOrganizationJsonLd(
       "Hamile çekimi",
       "Yenidoğan fotoğrafçılığı",
       "Bebek fotoğrafçılığı",
+      "Çocuk fotoğrafçılığı",
       "Düğün fotoğrafçılığı",
+      "Ankara Gölbaşı fotoğraf çekimi",
     ],
     sameAs,
   };
@@ -73,6 +97,63 @@ export function buildWebsiteJsonLd(config: SiteConfig) {
     inLanguage: "tr-TR",
     publisher: {
       "@id": `${config.url}/#organization`,
+    },
+  };
+}
+
+export function buildFaqPageJsonLd(
+  items: { question: string; answer: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+export function buildArticleJsonLd(input: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified?: string;
+  image?: string;
+  authorName: string;
+  publisherName: string;
+  publisherLogo: string;
+  siteUrl: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.title,
+    description: input.description,
+    url: input.url,
+    datePublished: input.datePublished,
+    dateModified: input.dateModified ?? input.datePublished,
+    ...(input.image ? { image: [input.image] } : {}),
+    author: {
+      "@type": "Person",
+      name: input.authorName,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: input.publisherName,
+      logo: {
+        "@type": "ImageObject",
+        url: input.publisherLogo,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": input.url,
     },
   };
 }

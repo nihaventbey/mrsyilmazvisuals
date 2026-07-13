@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Rezervasyon",
   description:
     "Bebek, doğum, hamile veya düğün çekiminiz için rezervasyon oluşturun. Tercih ettiğiniz tarihi ve konsepti paylaşın.",
+  alternates: { canonical: "/rezervasyon" },
 };
 
 const steps = [

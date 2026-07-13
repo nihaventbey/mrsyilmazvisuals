@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { fetchMaintenanceEnabled } from "@/lib/maintenance";
+import {
+  isMarkdownEligiblePath,
+  wantsMarkdown,
+} from "@/lib/markdown-negotiate";
 
 function createSupabaseClient(request: NextRequest, response: NextResponse) {
   return createServerClient(
@@ -24,6 +28,25 @@ function createSupabaseClient(request: NextRequest, response: NextResponse) {
   );
 }
 
+function withHomepageLinkHeaders(response: NextResponse, pathname: string) {
+  if (pathname !== "/") return response;
+
+  response.headers.append(
+    "Link",
+    '</.well-known/api-catalog>; rel="api-catalog"',
+  );
+  response.headers.append("Link", '</llms.txt>; rel="describedby"');
+  response.headers.append(
+    "Link",
+    '</.well-known/agent-skills/index.json>; rel="enclosure"',
+  );
+  response.headers.append(
+    "Link",
+    '</sitemap.xml>; rel="describedby"; type="application/xml"',
+  );
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -32,6 +55,12 @@ export async function proxy(request: NextRequest) {
   const isMaintenancePage = pathname === "/bakim";
   const isLegalPage = pathname === "/gizlilik-politikasi";
   const isAdminRoute = pathname.startsWith("/admin");
+  const isPublicDiscovery =
+    pathname === "/robots.txt" ||
+    pathname === "/llms.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/.well-known/") ||
+    pathname === "/api/site-markdown";
   const supabaseConfigured =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
@@ -46,11 +75,26 @@ export async function proxy(request: NextRequest) {
 
   const maintenanceOn = await fetchMaintenanceEnabled();
 
+  // Accept: text/markdown → site markdown summary for selected pages
+  // (allowed even during maintenance so agents can still read summaries)
+  if (
+    !isAdminRoute &&
+    wantsMarkdown(request.headers.get("accept")) &&
+    isMarkdownEligiblePath(pathname)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/site-markdown";
+    url.searchParams.set("path", pathname);
+    const rewritten = NextResponse.rewrite(url);
+    return withHomepageLinkHeaders(rewritten, pathname);
+  }
+
   if (
     maintenanceOn &&
     !isAdminRoute &&
     !isMaintenancePage &&
     !isLegalPage &&
+    !isPublicDiscovery &&
     !user
   ) {
     const url = request.nextUrl.clone();
@@ -71,7 +115,7 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/admin/giris";
       return NextResponse.redirect(url);
     }
-    return response;
+    return withHomepageLinkHeaders(response, pathname);
   }
 
   // Refresh the session and gate the admin area.
@@ -87,7 +131,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return response;
+  return withHomepageLinkHeaders(response, pathname);
 }
 
 export const config = {

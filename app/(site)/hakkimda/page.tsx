@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Hakkımda",
     description: `${config.author} kimdir? Doğum, hamile, yenidoğan ve bebek fotoğrafçılığındaki yaklaşımı ve hikâyesi.`,
+    alternates: { canonical: "/hakkimda" },
   };
 }
 

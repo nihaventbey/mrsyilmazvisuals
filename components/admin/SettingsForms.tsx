@@ -198,13 +198,34 @@ export function SettingsForms({
       >
         <ActionForm action={saveContactSettings} submitLabel="İletişim Ayarlarını Kaydet">
           <div className="grid gap-4 sm:grid-cols-2">
-            <InputField label="Konum" name="location" defaultValue={contact.location} />
+            <InputField
+              label="Konum"
+              name="location"
+              defaultValue={contact.location}
+              placeholder="Örn. Üsküdar, İstanbul"
+            />
             <InputField
               label="Çalışma Saatleri"
               name="working_hours"
               defaultValue={contact.workingHours}
             />
           </div>
+          <InputField
+            label="Google Maps bağlantısı"
+            name="maps_url"
+            defaultValue={contact.mapsUrl}
+            placeholder="https://maps.app.goo.gl/... veya Google Maps yer linki"
+          />
+          <p className="text-xs text-mist">
+            Link eklenince iletişim sayfasında harita görünür. Boş bırakılırsa harita
+            gösterilmez.
+          </p>
+          <InputField
+            label="WhatsApp telefon"
+            name="whatsapp_phone"
+            defaultValue={contact.whatsappPhone}
+            placeholder="+90 544 975 83 38"
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <InputField
               label="Instagram Kullanıcı Adı"

@@ -5,6 +5,7 @@ import {
   isSupabaseConfigured,
   storagePublicUrl,
 } from "@/lib/supabase/public";
+import { formatWhatsAppDisplay, toWhatsAppUrl } from "@/lib/whatsapp";
 
 export type TimelineItem = {
   year: string;
@@ -30,6 +31,8 @@ export type GeneralSettings = {
 
 export type ContactSettings = {
   location: string;
+  mapsUrl: string;
+  whatsappPhone: string;
   workingHours: string;
   instagramHandle: string;
   instagramUrl: string;
@@ -73,6 +76,9 @@ export type SiteConfig = {
   aboutImage: string;
   profileImage: string;
   location: string;
+  mapsUrl: string;
+  whatsappPhone: string;
+  whatsappUrl: string | null;
   workingHours: string;
 };
 
@@ -179,6 +185,9 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
     aboutImage,
     profileImage: aboutImage,
     location: settings.contact.location,
+    mapsUrl: settings.contact.mapsUrl,
+    whatsappPhone: settings.contact.whatsappPhone,
+    whatsappUrl: toWhatsAppUrl(settings.contact.whatsappPhone),
     workingHours: settings.contact.workingHours,
   };
 });
@@ -186,16 +195,41 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
 export const getContactChannels = cache(async (): Promise<ContactChannel[]> => {
   const settings = await getSiteSettings();
   const { contact } = settings;
+  const mapsHref = contact.mapsUrl?.trim() || undefined;
+  const whatsappUrl = toWhatsAppUrl(contact.whatsappPhone);
 
-  return [
+  const channels: ContactChannel[] = [
     {
       label: "Instagram",
       value: contact.instagramHandle,
       href: contact.instagramUrl,
     },
-    { label: "Konum", value: contact.location },
-    { label: "Çalışma Saatleri", value: contact.workingHours },
   ];
+
+  if (whatsappUrl) {
+    channels.push({
+      label: "WhatsApp",
+      value: formatWhatsAppDisplay(contact.whatsappPhone),
+      href: whatsappUrl,
+    });
+  }
+
+  if (contact.location?.trim()) {
+    channels.push({
+      label: "Konum",
+      value: contact.location.trim(),
+      href: mapsHref,
+    });
+  }
+
+  if (contact.workingHours?.trim()) {
+    channels.push({
+      label: "Çalışma Saatleri",
+      value: contact.workingHours.trim(),
+    });
+  }
+
+  return channels;
 });
 
 export const getSocialLinks = cache(async (): Promise<SocialLink[]> => {

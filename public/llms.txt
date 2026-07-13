@@ -1,35 +1,58 @@
 # Mrs. Yılmaz Visuals
 
-> İstanbul merkezli doğum, hamile, yenidoğan, bebek ve düğün fotoğrafçılığı hizmeti.
+> Ankara (Gölbaşı) ve İstanbul'da doğum, hamile, yenidoğan, bebek, çocuk ve düğün fotoğrafçılığı.
 
-## Site
+- Site: https://www.mrsyilmaz.com
+- Fotoğrafçı: Melike Yılmaz
+- Dil: tr-TR
 
-- Ana sayfa: /
-- Hakkımda: /hakkimda
-- Portfolyo: /portfolyo
-- Blog: /blog
-- SSS: /sss
-- İletişim: /iletisim
-- Rezervasyon: /rezervasyon
-- Gizlilik Politikası: /gizlilik-politikasi
+## Hizmet bölgeleri
+
+- Ankara — özellikle Gölbaşı
+- İstanbul
+
+## Sayfalar
+
+- Ana sayfa: https://www.mrsyilmaz.com/
+- Hakkımda: https://www.mrsyilmaz.com/hakkimda
+- Portfolyo: https://www.mrsyilmaz.com/portfolyo
+- Blog: https://www.mrsyilmaz.com/blog
+- SSS: https://www.mrsyilmaz.com/sss
+- İletişim: https://www.mrsyilmaz.com/iletisim
+- Rezervasyon: https://www.mrsyilmaz.com/rezervasyon
+- Gizlilik: https://www.mrsyilmaz.com/gizlilik-politikasi
 
 ## Hizmetler
 
 - Doğum fotoğrafçılığı (hastane doğumları dahil)
 - Hamile çekimleri
 - Yenidoğan ve bebek çekimleri
+- Çocuk fotoğrafçılığı
 - Düğün fotoğrafçılığı
 
 ## İletişim
 
 - Instagram: https://www.instagram.com/mrs.yilmaz.visuals/
-- Konum: Üsküdar, İstanbul
-- Randevu: /rezervasyon veya /iletisim
+- WhatsApp: https://wa.me/905449758338
+- Konum (gösterim): Üsküdar, İstanbul — hizmet alanı Ankara Gölbaşı + İstanbul
+- Form: https://www.mrsyilmaz.com/iletisim
+- Rezervasyon: https://www.mrsyilmaz.com/rezervasyon
 
-## Fotoğrafçı
+## Agent / machine surfaces
 
-Melike Yılmaz — 2016'dan beri profesyonel fotoğrafçılık; 2019'dan itibaren doğum ve aile fotoğrafçılığına odaklı.
+- API catalog: https://www.mrsyilmaz.com/.well-known/api-catalog
+- Health: https://www.mrsyilmaz.com/.well-known/health
+- Agent skills index: https://www.mrsyilmaz.com/.well-known/agent-skills/index.json
+- This file: https://www.mrsyilmaz.com/llms.txt
+- Sitemap: https://www.mrsyilmaz.com/sitemap.xml
 
-## Not
+## Content policy (Content-Signal)
 
-Bu site bir portfolyo ve rezervasyon sitesidir. İçerik Türkçedir.
+- search=yes
+- ai-train=no (müşteri görselleri eğitim için kullanılmasın)
+- ai-input=yes (keşif ve soru-cevap için açık)
+
+## Notlar
+
+Bu site bir portfolyo ve rezervasyon sitesidir; genel amaçlı API veya MCP ürünü değildir.
+DNS-AID, OAuth korumalı kaynak, MCP server-card ve WebMCP kasıtlı olarak sunulmaz.

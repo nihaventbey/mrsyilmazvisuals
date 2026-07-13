@@ -8,6 +8,8 @@ import {
   getBlogPost,
   getBlogPosts,
 } from "@/lib/content";
+import { absoluteUrl, buildArticleJsonLd } from "@/lib/seo";
+import { getSiteConfig } from "@/lib/settings";
 
 type Params = { slug: string };
 
@@ -29,6 +31,7 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       type: "article",
       title: post.title,
@@ -44,11 +47,30 @@ export default async function BlogPostPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const post = await getBlogPost(slug);
+  const [post, config] = await Promise.all([
+    getBlogPost(slug),
+    getSiteConfig(),
+  ]);
   if (!post) notFound();
+
+  const articleUrl = absoluteUrl(`/blog/${post.slug}`, config.url);
+  const articleLd = buildArticleJsonLd({
+    title: post.title,
+    description: post.excerpt,
+    url: articleUrl,
+    datePublished: post.date,
+    authorName: config.author,
+    publisherName: config.name,
+    publisherLogo: absoluteUrl(config.logoImage, config.url),
+    siteUrl: config.url,
+  });
 
   return (
     <article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+      />
       <div className="container-page max-w-3xl pt-12">
         <Link
           href="/blog"

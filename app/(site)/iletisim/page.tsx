@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ContactForm } from "@/components/forms/ContactForm";
+import { LocationMap } from "@/components/ui/LocationMap";
 import {
   getContactChannels,
-  getSiteConfig,
   getSiteSettings,
   getSocialLinks,
 } from "@/lib/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const config = await getSiteConfig();
+  const settings = await getSiteSettings();
   return {
     title: "İletişim",
-    description: `Doğum, hamile, yenidoğan ve bebek çekimleri için ${config.author} ile iletişime geçin.`,
+    description: settings.contact.pageDescription,
   };
 }
 
@@ -23,6 +23,7 @@ export default async function ContactPage() {
     getSocialLinks(),
   ]);
   const { contact } = settings;
+  const hasMap = Boolean(contact.mapsUrl?.trim());
 
   return (
     <>
@@ -32,8 +33,8 @@ export default async function ContactPage() {
         description={contact.pageDescription}
       />
 
-      <section className="container-page py-20">
-        <div className="grid gap-12 lg:grid-cols-2">
+      <section className="container-page py-12 sm:py-16 lg:py-20">
+        <div className="grid gap-10 sm:gap-12 lg:grid-cols-2">
           <div>
             <h2 className="text-2xl text-espresso">İletişim Bilgileri</h2>
             <dl className="mt-8 space-y-6">
@@ -79,17 +80,16 @@ export default async function ContactPage() {
               </div>
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-2xl border border-espresso/10">
-              <iframe
-                title={`Konum haritası — ${contact.location}`}
-                src="https://www.openstreetmap.org/export/embed.html?bbox=29.00%2C41.01%2C29.08%2C41.05&layer=mapnik&marker=41.0225%2C29.0150"
-                className="h-64 w-full"
-                loading="lazy"
+            {hasMap && (
+              <LocationMap
+                mapsUrl={contact.mapsUrl}
+                locationLabel={contact.location}
+                className="mt-8"
               />
-            </div>
+            )}
           </div>
 
-          <div className="rounded-3xl border border-espresso/10 bg-white/40 p-8">
+          <div className="rounded-3xl border border-espresso/10 bg-white/40 p-6 sm:p-8">
             <h2 className="text-2xl text-espresso">Mesaj Gönderin</h2>
             <p className="mt-2 text-sm text-mocha">
               {contact.formNote}{" "}

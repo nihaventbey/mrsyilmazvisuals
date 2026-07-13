@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Portfolyo",
   description:
     "Bebek, doğum, hamile ve düğün çekimlerinden seçkiler. Kategorilere göz atın ve tarzımı keşfedin.",
+  alternates: { canonical: "/portfolyo" },
 };
 
 export const revalidate = 60;

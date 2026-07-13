@@ -571,6 +571,8 @@ export async function saveContactSettings(
   try {
     await upsertSetting(supabase, "contact", {
       location: String(formData.get("location") ?? ""),
+      mapsUrl: String(formData.get("maps_url") ?? "").trim(),
+      whatsappPhone: String(formData.get("whatsapp_phone") ?? "").trim(),
       workingHours: String(formData.get("working_hours") ?? ""),
       instagramHandle: String(formData.get("instagram_handle") ?? ""),
       instagramUrl: String(formData.get("instagram_url") ?? ""),

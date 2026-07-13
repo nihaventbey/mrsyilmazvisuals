@@ -4,11 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_PHONE = "905449758338";
-const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(
-  "Merhaba, çekim hakkında bilgi almak istiyorum.",
-)}`;
-
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -22,11 +17,15 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function FloatingActions() {
+type FloatingActionsProps = {
+  whatsappUrl?: string | null;
+};
+
+export function FloatingActions({ whatsappUrl }: FloatingActionsProps) {
   const pathname = usePathname();
   const [showTop, setShowTop] = useState(false);
   const isAdmin = pathname.startsWith("/admin");
-  const showWhatsApp = !isAdmin;
+  const showWhatsApp = !isAdmin && Boolean(whatsappUrl);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 420);
@@ -42,9 +41,9 @@ export function FloatingActions() {
         "right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:right-5 sm:bottom-5",
       )}
     >
-      {showWhatsApp && (
+      {showWhatsApp && whatsappUrl && (
         <a
-          href={WHATSAPP_HREF}
+          href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="WhatsApp ile yazın"

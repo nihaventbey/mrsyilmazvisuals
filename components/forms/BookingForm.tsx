@@ -85,9 +85,9 @@ export function BookingForm({
         />
       </div>
       <InputField
-        label="Konum / Şehir"
+        label="Konum"
         name="location"
-        placeholder="Örn. İstanbul, stüdyo veya dış mekân"
+        placeholder="Örn. Ev, stüdyo veya Google Maps bağlantısı"
         errors={state.errors?.location}
       />
       <TextareaField

@@ -3,11 +3,13 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Accordion } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { getFaq } from "@/lib/content";
+import { buildFaqPageJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Sık Sorulan Sorular",
   description:
     "Doğum, hamile, yenidoğan ve bebek çekimleri hakkında sık sorulan sorular ve yanıtları.",
+  alternates: { canonical: "/sss" },
 };
 
 export const revalidate = 60;
@@ -17,6 +19,12 @@ export default async function FaqPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildFaqPageJsonLd(faq)),
+        }}
+      />
       <PageHeader
         eyebrow="SSS"
         title="Merak edilenler"

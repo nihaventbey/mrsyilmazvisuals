@@ -118,7 +118,7 @@ export async function Footer({
             >
               Gizlilik Politikası
             </Link>
-            <span>{location}</span>
+            {location ? <span>{location}</span> : null}
           </div>
         </div>
       </div>

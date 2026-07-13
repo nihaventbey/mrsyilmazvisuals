@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Blog",
   description:
     "Bebek, doğum, hamile ve düğün çekimleri üzerine ilham veren rehberler, ipuçları ve deneyimler.",
+  alternates: { canonical: "/blog" },
 };
 
 export const revalidate = 60;

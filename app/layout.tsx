@@ -34,12 +34,17 @@ export async function generateMetadata(): Promise<Metadata> {
       config.name,
       "doğum fotoğrafçısı",
       "bebek fotoğrafçısı",
+      "çocuk fotoğrafçısı",
       "hamile çekimi",
       "yenidoğan çekimi",
       "düğün fotoğrafçısı",
-      "Üsküdar fotoğrafçı",
+      "Ankara Gölbaşı fotoğraf çekimi",
+      "Gölbaşı bebek fotoğrafçısı",
+      "Gölbaşı düğün fotoğrafçısı",
+      "Ankara doğum fotoğrafçısı",
       "İstanbul doğum fotoğrafçısı",
       "İstanbul bebek fotoğrafçısı",
+      "Üsküdar fotoğrafçı",
       "Mrs Yılmaz Visuals",
     ],
     authors: [{ name: config.author, url: `${config.url}/hakkimda` }],
@@ -87,11 +92,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const config = await getSiteConfig();
+
   return (
     <html
       lang="tr"
@@ -100,7 +107,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-cream text-espresso">
         <JsonLd />
         {children}
-        <FloatingActions />
+        <FloatingActions whatsappUrl={config.whatsappUrl} />
       </body>
     </html>
   );

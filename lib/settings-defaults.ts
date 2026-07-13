@@ -10,18 +10,20 @@ export const defaultSettings: SiteSettings = {
     logoImage: "/images/logo.svg",
     logoIcon: "/images/logo.svg",
     profileImage: "/images/melike-yilmaz.jpg",
-    url: "https://mrsyilmazvisuals.com",
+    url: "https://www.mrsyilmaz.com",
   },
   contact: {
     location: "Üsküdar, İstanbul",
-    workingHours: "Randevu ile — Instagram veya form üzerinden ulaşabilirsiniz",
+    mapsUrl: "",
+    whatsappPhone: "+90 544 975 83 38",
+    workingHours: "Randevu ile — Instagram veya WhatsApp üzerinden ulaşabilirsiniz",
     instagramHandle: "@mrs.yilmaz.visuals",
     instagramUrl: "https://www.instagram.com/mrs.yilmaz.visuals/",
     pageTitle: "Hadi tanışalım",
     pageDescription:
-      "Çekim planınız, sorularınız veya randevu talebiniz için formu doldurun ya da Instagram üzerinden doğrudan yazın. En kısa sürede dönüş yaparım.",
+      "Çekim planınız, sorularınız veya randevu talebiniz için formu doldurun ya da Instagram veya WhatsApp üzerinden doğrudan yazın. En kısa sürede dönüş yaparım.",
     formNote:
-      "Formu doldurun; mesajınız bana ulaşsın. Daha hızlı iletişim için Instagram'dan da yazabilirsiniz.",
+      "Formu doldurun; mesajınız bana ulaşsın. Daha hızlı iletişim için Instagram veya WhatsApp'tan da yazabilirsiniz.",
   },
   about: {
     pageDescription:
