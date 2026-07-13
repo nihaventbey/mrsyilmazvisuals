@@ -22,8 +22,8 @@ export async function Footer({
   const services = await getServices();
 
   return (
-    <footer className="mt-24 border-t border-espresso/10 bg-sand/40">
-      <div className="container-page grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="mt-16 border-t border-espresso/10 bg-sand/40 sm:mt-24">
+      <div className="container-page grid gap-10 py-12 sm:gap-12 sm:py-16 md:grid-cols-2 lg:grid-cols-4">
         <div className="lg:col-span-1">
           <p className="font-serif text-2xl text-espresso">{siteName}</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-mocha">

@@ -57,7 +57,7 @@ export function AdminSidebar({
             </Link>
           </div>
 
-          <nav className="mt-4 flex flex-1 flex-col gap-1 px-4">
+          <nav className="mt-4 flex flex-1 flex-col gap-0.5 px-3 pb-2">
             {adminLinks.map((link) => (
               <Link
                 key={link.href}
@@ -74,7 +74,7 @@ export function AdminSidebar({
             ))}
           </nav>
 
-          <div className="mt-6 shrink-0 space-y-2 border-t border-espresso/10 px-5 py-4">
+          <div className="mt-auto shrink-0 space-y-2 border-t border-espresso/10 px-5 py-4">
             <p className="truncate text-xs text-mist">{email}</p>
             <Link
               href="/"
@@ -85,7 +85,7 @@ export function AdminSidebar({
             <form action={signOut}>
               <button
                 type="submit"
-                className="text-sm text-red-700 transition-colors hover:text-red-900"
+                className="cursor-pointer text-sm text-red-700 transition-colors hover:text-red-900"
               >
                 Çıkış Yap
               </button>
@@ -95,18 +95,18 @@ export function AdminSidebar({
       </aside>
 
       <div className="sticky top-0 z-30 border-b border-espresso/10 bg-sand/95 backdrop-blur-sm lg:hidden">
-        <div className="flex items-center gap-3 border-b border-espresso/5 px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-espresso/5 px-3 py-2.5 sm:px-4 sm:py-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logoSrc}
             alt={siteName}
-            className="h-9 w-auto max-w-[180px] object-contain object-left"
+            className="h-8 w-auto max-w-[min(160px,55vw)] object-contain object-left sm:h-9 sm:max-w-[180px]"
           />
           <p className="shrink-0 text-[10px] tracking-[0.18em] text-gold-dark uppercase">
             Yönetim
           </p>
         </div>
-        <nav className="flex gap-2 overflow-x-auto px-4 py-3 text-xs whitespace-nowrap">
+        <nav className="-mx-0 flex gap-2 overflow-x-auto overscroll-x-contain px-3 py-2.5 text-xs whitespace-nowrap [scrollbar-width:none] sm:px-4 sm:py-3 [&::-webkit-scrollbar]:hidden">
           {adminLinks.map((link) => (
             <Link
               key={link.href}

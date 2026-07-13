@@ -31,10 +31,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-espresso/10 bg-white/50 p-6">
+    <section className="rounded-2xl border border-espresso/10 bg-white/50 p-4 sm:p-6">
       <h2 className="font-serif text-xl text-espresso">{title}</h2>
       <p className="mt-1 text-sm text-mocha">{description}</p>
-      <div className="mt-6">{children}</div>
+      <div className="mt-5 sm:mt-6">{children}</div>
     </section>
   );
 }
@@ -55,7 +55,7 @@ export function SettingsForms({
   const { general, contact, about, home } = settings;
 
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="max-w-5xl space-y-6 sm:space-y-8">
       <Section
         title="Görseller"
         description="Site logosu ve hakkımda sayfası portre fotoğrafı ayrı yüklenir; birbirinin yerine geçmez."

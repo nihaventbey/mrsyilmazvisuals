@@ -38,7 +38,7 @@ export default async function AdminLayout({
         logoIconSrc={config.logoIcon}
       />
       <div className="lg:pl-64">
-        <main className="p-6 lg:p-10">{children}</main>
+        <main className="overflow-x-hidden p-4 sm:p-6 lg:p-10">{children}</main>
       </div>
     </div>
   );

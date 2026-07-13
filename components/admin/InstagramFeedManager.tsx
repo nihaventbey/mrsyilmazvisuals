@@ -110,38 +110,6 @@ export function InstagramFeedManager({
       <FormMessage state={state} />
       <FormMessage state={testState} />
 
-      <div className="rounded-2xl border border-espresso/10 bg-white/50 p-5 text-sm text-mocha">
-        <p className="font-medium text-espresso">Instagram Graph API kurulumu</p>
-        <ol className="mt-3 list-decimal space-y-2 pl-5">
-          <li>Instagram hesabınızı Profesyonel veya Creator hesaba çevirin.</li>
-          <li>Facebook Sayfanıza bağlayın.</li>
-          <li>
-            <a
-              href="https://developers.facebook.com/apps/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-espresso underline underline-offset-4"
-            >
-              Meta Developer
-            </a>
-            {" "}üzerinde uygulama oluşturup Instagram Graph API ekleyin.
-          </li>
-          <li>
-            Uzun ömürlü erişim token&apos;ı alın (
-            <code className="rounded bg-cream px-1">instagram_basic</code>,{" "}
-            <code className="rounded bg-cream px-1">pages_show_list</code>
-            ).
-          </li>
-          <li>
-            Vercel → Settings → Environment Variables bölümüne{" "}
-            <code className="rounded bg-cream px-1">INSTAGRAM_ACCESS_TOKEN</code>{" "}
-            ekleyin. İsteğe bağlı:{" "}
-            <code className="rounded bg-cream px-1">INSTAGRAM_USER_ID</code>.
-          </li>
-          <li>Deploy sonrası buradan &quot;Bağlantıyı Test Et&quot; deyin.</li>
-        </ol>
-      </div>
-
       <div
         className={`rounded-xl border px-4 py-3 text-sm ${
           graphStatus.connected

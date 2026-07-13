@@ -15,35 +15,35 @@ export async function InstagramFeed() {
   const { instagramHandle, instagramUrl } = siteSettings.contact;
 
   return (
-    <section className="border-t border-espresso/10 bg-cream py-20">
+    <section className="border-t border-espresso/10 bg-cream py-12 sm:py-16 lg:py-20">
       <div className="container-page">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
           <SectionHeading
             eyebrow={settings.eyebrow}
             title={settings.title}
             description={`${instagramHandle} hesabındaki son kareler.`}
             align="left"
-            className="mb-0"
+            className="mb-0 max-w-full sm:max-w-2xl"
           />
           <Link
             href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-espresso/20 px-5 py-2.5 text-sm text-espresso transition-colors hover:border-espresso hover:bg-espresso/5"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-espresso/20 px-5 py-2.5 text-sm text-espresso transition-colors hover:border-espresso hover:bg-espresso/5 sm:w-auto"
           >
             Instagram&apos;da Takip Et
             <span aria-hidden>↗</span>
           </Link>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-2 sm:mt-10 sm:gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {posts.map((post) => (
             <a
               key={post.id}
               href={post.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative aspect-square overflow-hidden rounded-2xl bg-sand/60"
+              className="group relative aspect-square overflow-hidden rounded-xl bg-sand/60 sm:rounded-2xl"
               aria-label="Instagram gönderisini aç"
             >
               <Image

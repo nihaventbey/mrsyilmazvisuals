@@ -60,16 +60,28 @@ export const defaultSettings: SiteSettings = {
     ],
     values: [
       {
-        title: "Samimiyet",
-        text: "Poz vermekten çok, gerçek duyguları ve doğal anları yakalamayı severim. Çekimlerimizde rahat hissetmeniz benim için en önemli şey.",
+        title: "Doğallık",
+        text: "Her karede yapaylıktan uzak, gerçek duyguları yakalamayı önemsiyorum.",
       },
       {
-        title: "İletişim",
-        text: "Özellikle doğum çekimlerinde, çekim öncesinde ailelerle detaylı iletişim kurarak herkesin hazır ve huzurlu olmasını sağlarım.",
+        title: "Samimiyet",
+        text: "Çekim boyunca kendinizi rahat hissetmeniz benim için en önemli öncelik.",
+      },
+      {
+        title: "Zamansızlık",
+        text: "Modası geçmeyen, yıllar sonra da aynı değeri taşıyan fotoğraflar üretiyorum.",
       },
       {
         title: "Güven",
-        text: "Hastane doğumlarında sertifikalı deneyimimle, bebek ve yenidoğan çekimlerinde ise güvenlik ve konforu her şeyin önünde tutarım.",
+        text: "En özel anlarınızı büyük bir özen ve profesyonellikle kayıt altına alıyorum.",
+      },
+      {
+        title: "Kalite",
+        text: "Çekimden teslimata kadar her aşamada yüksek kalite standartlarıyla çalışıyorum.",
+      },
+      {
+        title: "Hatıra",
+        text: "Fotoğrafların yalnızca bugünü değil, gelecek nesillere aktarılacak anıları da koruduğuna inanıyorum.",
       },
     ],
   },

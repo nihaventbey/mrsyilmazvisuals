@@ -99,6 +99,28 @@ function mergeSection<T extends object>(defaults: T, value: unknown): T {
   return { ...defaults, ...(value as Partial<T>) };
 }
 
+function mergeAboutSettings(value: unknown): AboutSettings {
+  const merged = mergeSection(defaultSettings.about, value);
+  const rows = Array.isArray(merged.values) ? merged.values : [];
+
+  // Eski 3'lü varsayılan set hâlâ DB'deyse yeni marka değerleriyle değiştir.
+  const legacyTitles = ["Samimiyet", "İletişim", "Güven"];
+  const isLegacy =
+    rows.length === 3 &&
+    rows.every(
+      (row, i) =>
+        row &&
+        typeof row === "object" &&
+        String((row as ValueItem).title) === legacyTitles[i],
+    );
+
+  if (rows.length === 0 || isLegacy) {
+    return { ...merged, values: defaultSettings.about.values };
+  }
+
+  return merged;
+}
+
 function resolveImageUrl(path: string | undefined, fallback: string): string {
   const value = String(path ?? "").trim();
   if (!value) return fallback;
@@ -125,7 +147,7 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
   return {
     general: mergeSection(defaultSettings.general, rows.general),
     contact: mergeSection(defaultSettings.contact, rows.contact),
-    about: mergeSection(defaultSettings.about, rows.about),
+    about: mergeAboutSettings(rows.about),
     home: mergeSection(defaultSettings.home, rows.home),
   };
 });

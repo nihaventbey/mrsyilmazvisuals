@@ -32,12 +32,12 @@ export default async function AboutPage() {
         description={about.pageDescription}
       />
 
-      <section className="container-page py-20">
-        <div className="grid items-start gap-12 lg:grid-cols-2">
+      <section className="container-page py-12 sm:py-16 lg:py-20">
+        <div className="grid items-start gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-12">
           <AuthorPhoto
             src={config.aboutImage}
             alt={config.author}
-            className="aspect-[4/5]"
+            className="aspect-[4/5] w-full max-w-md mx-auto lg:mx-0 lg:max-w-none"
             priority
           />
           <div>
@@ -65,18 +65,18 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-sand/40 py-20">
+      <section className="bg-sand/40 py-12 sm:py-16 lg:py-20">
         <div className="container-page">
           <h2 className="text-center text-2xl text-espresso sm:text-3xl">
             Yaklaşımım
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {about.values.map((value) => (
               <div
                 key={value.title}
-                className="rounded-2xl bg-white/50 p-8 text-center"
+                className="rounded-2xl bg-white/50 p-6 text-center sm:p-8"
               >
-                <h3 className="text-xl text-espresso">{value.title}</h3>
+                <h3 className="text-lg text-espresso sm:text-xl">{value.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-mocha">
                   {value.text}
                 </p>

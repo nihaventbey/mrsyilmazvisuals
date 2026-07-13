@@ -46,15 +46,17 @@ export function Header({
           : "bg-transparent",
       )}
     >
-      <div className="container-page flex h-24 items-center justify-between">
+      <div className="container-page flex h-16 items-center justify-between gap-3 sm:h-20 md:h-24">
         <SiteLogo
           src={logoSrc}
           name={siteName}
           variant="wordmark"
           showName={false}
+          className="min-w-0"
+          imageClassName="max-h-10 max-w-[min(200px,55vw)] sm:max-h-14 sm:max-w-[min(280px,50vw)] md:max-h-20 md:max-w-[min(420px,40vw)]"
         />
 
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">
           {navLinks.map((link) => {
             const active =
               link.href === "/"
@@ -115,18 +117,18 @@ export function Header({
       </div>
 
       {open && (
-        <div className="fixed inset-0 top-24 z-40 bg-cream lg:hidden">
-          <nav className="container-page flex flex-col gap-2 py-8">
+        <div className="fixed inset-0 top-16 z-40 overflow-y-auto bg-cream sm:top-20 md:top-24 lg:hidden">
+          <nav className="container-page flex flex-col gap-1 py-6 sm:gap-2 sm:py-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="border-b border-espresso/10 py-4 font-serif text-2xl text-espresso"
+                className="border-b border-espresso/10 py-3.5 font-serif text-xl text-espresso sm:py-4 sm:text-2xl"
               >
                 {link.label}
               </Link>
             ))}
-            <Button href="/rezervasyon" size="lg" className="mt-6">
+            <Button href="/rezervasyon" size="lg" className="mt-6 w-full sm:w-auto">
               Rezervasyon Oluştur
             </Button>
           </nav>

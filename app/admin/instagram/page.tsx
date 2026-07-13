@@ -22,10 +22,6 @@ export default async function AdminInstagramPage() {
   return (
     <div>
       <h1 className="font-serif text-3xl text-espresso">Instagram Akışı</h1>
-      <p className="mt-2 text-sm text-mocha">
-        Graph API ile otomatik senkron veya manuel gönderi listesi. Ana sayfada
-        footer üstünde görünür.
-      </p>
       <div className="mt-8">
         <InstagramFeedManager
           initialSettings={settings}

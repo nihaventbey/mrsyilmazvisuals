@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { FloatingActions } from "@/components/layout/FloatingActions";
 import { absoluteUrl } from "@/lib/seo";
 import { getSiteConfig } from "@/lib/settings";
 
@@ -99,6 +100,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-cream text-espresso">
         <JsonLd />
         {children}
+        <FloatingActions />
       </body>
     </html>
   );

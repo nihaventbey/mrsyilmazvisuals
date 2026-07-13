@@ -46,7 +46,13 @@
     width: 100%;
     max-width: 80rem;
     margin-inline: auto;
-    padding-inline: 1.5rem;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
   }
 
   .fade-up {
