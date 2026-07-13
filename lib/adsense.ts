@@ -34,13 +34,10 @@ function mergeSlot(
 
 function mergeAdSenseSettings(value: unknown): AdSenseSettings {
   if (!value || typeof value !== "object") return defaultAdSenseSettings;
-  const partial = value as Partial<AdSenseSettings> & {
-    enabled?: unknown;
-    testMode?: unknown;
-  };
+  const raw = value as Record<string, unknown>;
 
   const slots = { ...defaultAdSenseSettings.slots };
-  const incoming = partial.slots;
+  const incoming = raw.slots;
   if (incoming && typeof incoming === "object") {
     for (const key of Object.keys(slots) as AdSenseSlotId[]) {
       slots[key] = mergeSlot(
@@ -50,15 +47,18 @@ function mergeAdSenseSettings(value: unknown): AdSenseSettings {
     }
   }
 
+  const enabledRaw = raw.enabled;
+  const testModeRaw = raw.testMode;
+
   return {
-    enabled: partial.enabled === true || partial.enabled === "true",
+    enabled: enabledRaw === true || enabledRaw === "true",
     publisherId: normalizePublisherId(
-      String(partial.publisherId ?? defaultAdSenseSettings.publisherId),
+      String(raw.publisherId ?? defaultAdSenseSettings.publisherId),
     ),
     testMode:
-      partial.testMode === true ||
-      partial.testMode === "true" ||
-      (partial.testMode == null && defaultAdSenseSettings.testMode),
+      testModeRaw === true ||
+      testModeRaw === "true" ||
+      (testModeRaw == null && defaultAdSenseSettings.testMode),
     slots,
   };
 }
