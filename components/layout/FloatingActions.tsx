@@ -38,7 +38,7 @@ export function FloatingActions() {
   return (
     <div
       className={cn(
-        "pointer-events-none fixed z-[60] flex flex-col-reverse items-end gap-3",
+        "pointer-events-none fixed z-[90] flex flex-col-reverse items-end gap-3",
         "right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:right-5 sm:bottom-5",
       )}
     >

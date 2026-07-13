@@ -95,15 +95,15 @@ export function Hero({
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative -mt-20 h-[300vh]">
+    <section ref={sectionRef} className="relative isolate z-0 -mt-20 h-[300vh]">
       <div
         ref={stageRef}
-        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
+        className="sticky top-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden"
       >
         {/* Warm backdrop */}
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 -z-10"
           style={{
             background:
               "radial-gradient(ellipse at 50% 42%, #f4e8d3 0%, #fbf7f0 60%, #f6efe2 100%)",
@@ -112,7 +112,7 @@ export function Hero({
 
         {/* Spreading photographs: WebGL scene or CSS fallback */}
         {webglOk ? (
-          <div className="absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 z-0">
             <Hero3D
               progressRef={progressRef}
               cards={cards}

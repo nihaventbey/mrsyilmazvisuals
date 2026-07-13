@@ -237,7 +237,7 @@ export default function Hero3D({
       camera={{ position: [0, 0, 6.4], fov: 46 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true }}
-      className="!absolute inset-0"
+      className="!absolute inset-0 !z-0"
       onCreated={({ gl }) => {
         gl.domElement.addEventListener(
           "webglcontextlost",
