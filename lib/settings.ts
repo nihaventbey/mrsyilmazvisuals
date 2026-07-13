@@ -99,10 +99,11 @@ function mergeSection<T extends object>(defaults: T, value: unknown): T {
   return { ...defaults, ...(value as Partial<T>) };
 }
 
-function resolveImageUrl(path: string): string {
-  if (!path) return defaultSettings.general.profileImage;
-  if (path.startsWith("http") || path.startsWith("/")) return path;
-  return storagePublicUrl("site", path) ?? path;
+function resolveImageUrl(path: string | undefined, fallback: string): string {
+  const value = String(path ?? "").trim();
+  if (!value) return fallback;
+  if (value.startsWith("http") || value.startsWith("/")) return value;
+  return storagePublicUrl("site", value) ?? fallback;
 }
 
 async function fetchSettingsRows(): Promise<Record<string, unknown>> {
@@ -133,13 +134,16 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
   const settings = await getSiteSettings();
 
   const logoImage = resolveImageUrl(
-    settings.general.logoImage || settings.general.profileImage || defaultSettings.general.logoImage,
+    settings.general.logoImage,
+    defaultSettings.general.logoImage,
   );
   const logoIcon = resolveImageUrl(
-    settings.general.logoIcon || settings.general.logoImage || defaultSettings.general.logoIcon,
+    settings.general.logoIcon,
+    defaultSettings.general.logoIcon,
   );
   const aboutImage = resolveImageUrl(
-    settings.about.aboutImage || settings.general.profileImage || defaultSettings.about.aboutImage,
+    settings.about.aboutImage,
+    defaultSettings.about.aboutImage,
   );
 
   return {
@@ -254,8 +258,25 @@ export function parseValues(value: string): ValueItem[] {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [title = "", ...rest] = line.split("|").map((s) => s.trim());
-      return { title, text: rest.join("|").trim() };
+      // Desteklenen ayırıcılar: | — - :
+      const parts = line.includes("|")
+        ? line.split("|")
+        : line.includes("—")
+          ? line.split("—")
+          : line.includes(" - ")
+            ? line.split(" - ")
+            : line.includes(":")
+              ? line.split(":")
+              : [line];
+
+      const title = String(parts[0] ?? "").trim();
+      const text = parts
+        .slice(1)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      return { title, text };
     })
     .filter((item) => item.title && item.text);
 }

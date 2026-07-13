@@ -4,6 +4,7 @@ import { FeaturedGallery } from "@/components/home/FeaturedGallery";
 import { AboutPreview } from "@/components/home/AboutPreview";
 import { BlogPreview } from "@/components/home/BlogPreview";
 import { CtaBand } from "@/components/home/CtaBand";
+import { InstagramFeed } from "@/components/home/InstagramFeed";
 import { getHeroCards } from "@/lib/hero";
 import { getSiteConfig } from "@/lib/settings";
 
@@ -25,6 +26,7 @@ export default async function HomePage() {
       <AboutPreview />
       <BlogPreview />
       <CtaBand />
+      <InstagramFeed />
     </>
   );
 }

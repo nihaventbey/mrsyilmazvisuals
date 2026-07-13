@@ -46,7 +46,7 @@ export function Header({
           : "bg-transparent",
       )}
     >
-      <div className="container-page flex h-20 items-center justify-between">
+      <div className="container-page flex h-24 items-center justify-between">
         <SiteLogo
           src={logoSrc}
           name={siteName}
@@ -115,7 +115,7 @@ export function Header({
       </div>
 
       {open && (
-        <div className="fixed inset-0 top-20 z-40 bg-cream lg:hidden">
+        <div className="fixed inset-0 top-24 z-40 bg-cream lg:hidden">
           <nav className="container-page flex flex-col gap-2 py-8">
             {navLinks.map((link) => (
               <Link

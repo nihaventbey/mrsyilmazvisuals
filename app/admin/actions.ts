@@ -11,6 +11,11 @@ import {
   splitParagraphs,
 } from "@/lib/settings";
 import type { HeroCard } from "@/lib/hero";
+import type { InstagramPost } from "@/lib/instagram";
+import {
+  fetchInstagramGraphPosts,
+  getInstagramGraphStatus,
+} from "@/lib/instagram-graph";
 
 // ================================ auth =================================
 
@@ -76,8 +81,23 @@ async function upsertSetting(
   key: string,
   value: Record<string, unknown>,
 ) {
+  const { data: existing } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+
+  const current =
+    existing?.value && typeof existing.value === "object" && !Array.isArray(existing.value)
+      ? (existing.value as Record<string, unknown>)
+      : {};
+
   const { error } = await supabase.from("site_settings").upsert(
-    { key, value, updated_at: new Date().toISOString() },
+    {
+      key,
+      value: { ...current, ...value },
+      updated_at: new Date().toISOString(),
+    },
     { onConflict: "key" },
   );
   if (error) throw new Error(error.message);
@@ -459,20 +479,18 @@ export async function deleteMessage(formData: FormData): Promise<void> {
 
 // ============================== settings ===============================
 
-export async function saveGeneralSettings(
+export async function saveLogoSettings(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
   const logoFile = formData.get("logo_file") as File | null;
   const logoIconFile = formData.get("logo_icon_file") as File | null;
-  let logoImage = String(formData.get("logo_image") ?? "");
-  let logoIcon = String(formData.get("logo_icon") ?? "");
-  let profileImage = String(formData.get("profile_image") ?? "");
+  const patch: Record<string, unknown> = {};
 
   if (logoFile && logoFile.size > 0) {
     const ext = logoFile.name.split(".").pop() || "png";
-    logoImage = `logo/wordmark-${Date.now()}.${ext}`;
+    const logoImage = `logo/wordmark-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("site")
       .upload(logoImage, logoFile, { contentType: logoFile.type, upsert: true });
@@ -482,11 +500,12 @@ export async function saveGeneralSettings(
         message: `Üst menü logosu yüklenemedi: ${uploadError.message}`,
       };
     }
+    patch.logoImage = logoImage;
   }
 
   if (logoIconFile && logoIconFile.size > 0) {
     const ext = logoIconFile.name.split(".").pop() || "png";
-    logoIcon = `logo/icon-${Date.now()}.${ext}`;
+    const logoIcon = `logo/icon-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("site")
       .upload(logoIcon, logoIconFile, { contentType: logoIconFile.type, upsert: true });
@@ -496,7 +515,32 @@ export async function saveGeneralSettings(
         message: `İkon logosu yüklenemedi: ${uploadError.message}`,
       };
     }
+    patch.logoIcon = logoIcon;
   }
+
+  if (Object.keys(patch).length === 0) {
+    return { status: "error", message: "Yeni bir logo dosyası seçin." };
+  }
+
+  try {
+    await upsertSetting(supabase, "general", patch);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/ayarlar");
+  return { status: "success", message: "Logolar kaydedildi." };
+}
+
+export async function saveGeneralSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
 
   try {
     await upsertSetting(supabase, "general", {
@@ -504,9 +548,6 @@ export async function saveGeneralSettings(
       tagline: String(formData.get("tagline") ?? ""),
       description: String(formData.get("description") ?? ""),
       author: String(formData.get("author") ?? ""),
-      logoImage,
-      logoIcon: logoIcon || logoImage,
-      profileImage: profileImage || logoImage,
       url: String(formData.get("url") ?? ""),
     });
   } catch (error) {
@@ -549,38 +590,67 @@ export async function saveContactSettings(
   return { status: "success", message: "İletişim ayarları kaydedildi." };
 }
 
-export async function saveAboutSettings(
+export async function saveAboutImageSettings(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
   const aboutFile = formData.get("about_image_file") as File | null;
-  let aboutImage = String(formData.get("about_image") ?? "");
 
-  if (aboutFile && aboutFile.size > 0) {
-    const ext = aboutFile.name.split(".").pop() || "jpg";
-    aboutImage = `about/${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("site")
-      .upload(aboutImage, aboutFile, { contentType: aboutFile.type, upsert: true });
-    if (uploadError) {
-      return {
-        status: "error",
-        message: `Hakkımda görseli yüklenemedi: ${uploadError.message}`,
-      };
-    }
+  if (!aboutFile || aboutFile.size === 0) {
+    return { status: "error", message: "Yeni bir portre fotoğrafı seçin." };
+  }
+
+  const ext = aboutFile.name.split(".").pop() || "jpg";
+  const aboutImage = `about/${Date.now()}.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from("site")
+    .upload(aboutImage, aboutFile, { contentType: aboutFile.type, upsert: true });
+  if (uploadError) {
+    return {
+      status: "error",
+      message: `Hakkımda görseli yüklenemedi: ${uploadError.message}`,
+    };
+  }
+
+  try {
+    await upsertSetting(supabase, "about", { aboutImage });
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/ayarlar");
+  return { status: "success", message: "Hakkımda görseli kaydedildi." };
+}
+
+export async function saveAboutSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+
+  const values = parseValues(String(formData.get("values") ?? ""));
+  if (values.length === 0) {
+    return {
+      status: "error",
+      message:
+        "Değerler boş kaydedilemez. Her satır: Başlık | Açıklama formatında olmalı.",
+    };
   }
 
   try {
     await upsertSetting(supabase, "about", {
       pageDescription: String(formData.get("page_description") ?? ""),
-      aboutImage,
       bioParagraphs: splitParagraphs(String(formData.get("bio_paragraphs") ?? "")),
       previewParagraphs: splitParagraphs(
         String(formData.get("preview_paragraphs") ?? ""),
       ),
       timeline: parseTimeline(String(formData.get("timeline") ?? "")),
-      values: parseValues(String(formData.get("values") ?? "")),
+      values,
     });
   } catch (error) {
     return {
@@ -719,6 +789,128 @@ export async function saveHeroSettings(
   revalidateSite();
   revalidatePath("/admin/hero");
   return { status: "success", message: "Hero kartları kaydedildi." };
+}
+
+// ============================== instagram ==============================
+
+export async function saveInstagramSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const source = formData.get("source") === "manual" ? "manual" : "graph";
+  const postLimit = Math.min(
+    12,
+    Math.max(3, Number(formData.get("post_limit") ?? 6)),
+  );
+
+  let posts: InstagramPost[] = [];
+  if (source === "manual") {
+    try {
+      posts = JSON.parse(String(formData.get("posts_json") ?? "[]")) as InstagramPost[];
+    } catch {
+      return { status: "error", message: "Gönderi verisi okunamadı." };
+    }
+  }
+
+  const updatedPosts: InstagramPost[] = [];
+
+  if (source === "manual") {
+    for (const post of posts) {
+      const url = String(post.url ?? "").trim();
+      if (!url) {
+        return { status: "error", message: "Tüm gönderilerin Instagram linki dolu olmalı." };
+      }
+
+      let image = String(post.image ?? "");
+      if (image.startsWith("http")) {
+        const marker = "/storage/v1/object/public/site/";
+        const idx = image.indexOf(marker);
+        image = idx >= 0 ? image.slice(idx + marker.length) : "";
+      }
+
+      const file = formData.get(`image_${post.id}`) as File | null;
+      if (file && file.size > 0) {
+        const ext = file.name.split(".").pop() || "jpg";
+        image = `instagram/${post.id}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("site")
+          .upload(image, file, { contentType: file.type, upsert: true });
+        if (uploadError) {
+          return {
+            status: "error",
+            message: `Görsel yüklenemedi: ${uploadError.message}`,
+          };
+        }
+      }
+
+      if (!image) {
+        return {
+          status: "error",
+          message: "Her gönderi için görsel yükleyin veya mevcut görseli koruyun.",
+        };
+      }
+
+      updatedPosts.push({
+        id: String(post.id),
+        image,
+        url,
+        enabled: post.enabled !== false,
+      });
+    }
+  }
+
+  try {
+    await upsertSetting(supabase, "instagram", {
+      enabled: formData.get("enabled") === "true",
+      source,
+      postLimit,
+      eyebrow: String(formData.get("eyebrow") ?? "Instagram").trim(),
+      title: String(formData.get("title") ?? "Son paylaşımlar").trim(),
+      posts: updatedPosts,
+    });
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/instagram");
+  return { status: "success", message: "Instagram akışı kaydedildi." };
+}
+
+export async function testInstagramGraphConnection(): Promise<FormState> {
+  await authedClient();
+  const status = await getInstagramGraphStatus();
+
+  if (!status.configured) {
+    return {
+      status: "error",
+      message: status.error ?? "Token tanımlı değil.",
+    };
+  }
+
+  if (!status.connected) {
+    return {
+      status: "error",
+      message: status.error ?? "Instagram API bağlantısı kurulamadı.",
+    };
+  }
+
+  try {
+    const posts = await fetchInstagramGraphPosts(6);
+    return {
+      status: "success",
+      message: `@${status.username} bağlı — ${posts.length} gönderi çekildi.`,
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Gönderiler alınamadı.",
+    };
+  }
 }
 
 // ============================= categories ==============================

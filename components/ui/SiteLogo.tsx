@@ -33,7 +33,7 @@ export function SiteLogo({
           src={src}
           alt={name}
           className={cn(
-            "h-10 w-auto max-w-[min(220px,52vw)] object-contain object-left sm:h-11",
+            "h-auto w-auto max-h-16 max-w-[min(420px,72vw)] object-contain object-left sm:max-h-20 md:max-h-24",
             imageClassName,
           )}
         />
