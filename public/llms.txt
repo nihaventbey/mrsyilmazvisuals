@@ -1,0 +1,35 @@
+# Mrs. Yılmaz Visuals
+
+> İstanbul merkezli doğum, hamile, yenidoğan, bebek ve düğün fotoğrafçılığı hizmeti.
+
+## Site
+
+- Ana sayfa: /
+- Hakkımda: /hakkimda
+- Portfolyo: /portfolyo
+- Blog: /blog
+- SSS: /sss
+- İletişim: /iletisim
+- Rezervasyon: /rezervasyon
+- Gizlilik Politikası: /gizlilik-politikasi
+
+## Hizmetler
+
+- Doğum fotoğrafçılığı (hastane doğumları dahil)
+- Hamile çekimleri
+- Yenidoğan ve bebek çekimleri
+- Düğün fotoğrafçılığı
+
+## İletişim
+
+- Instagram: https://www.instagram.com/mrs.yilmaz.visuals/
+- Konum: Üsküdar, İstanbul
+- Randevu: /rezervasyon veya /iletisim
+
+## Fotoğrafçı
+
+Melike Yılmaz — 2016'dan beri profesyonel fotoğrafçılık; 2019'dan itibaren doğum ve aile fotoğrafçılığına odaklı.
+
+## Not
+
+Bu site bir portfolyo ve rezervasyon sitesidir. İçerik Türkçedir.

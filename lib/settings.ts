@@ -22,6 +22,8 @@ export type GeneralSettings = {
   tagline: string;
   description: string;
   author: string;
+  logoImage: string;
+  logoIcon: string;
   profileImage: string;
   url: string;
 };
@@ -38,6 +40,7 @@ export type ContactSettings = {
 
 export type AboutSettings = {
   pageDescription: string;
+  aboutImage: string;
   bioParagraphs: string[];
   previewParagraphs: string[];
   timeline: TimelineItem[];
@@ -65,6 +68,9 @@ export type SiteConfig = {
   description: string;
   url: string;
   author: string;
+  logoImage: string;
+  logoIcon: string;
+  aboutImage: string;
   profileImage: string;
   location: string;
   workingHours: string;
@@ -126,13 +132,26 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
 export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
   const settings = await getSiteSettings();
 
+  const logoImage = resolveImageUrl(
+    settings.general.logoImage || settings.general.profileImage || defaultSettings.general.logoImage,
+  );
+  const logoIcon = resolveImageUrl(
+    settings.general.logoIcon || settings.general.logoImage || defaultSettings.general.logoIcon,
+  );
+  const aboutImage = resolveImageUrl(
+    settings.about.aboutImage || settings.general.profileImage || defaultSettings.about.aboutImage,
+  );
+
   return {
     name: settings.general.name,
     tagline: settings.general.tagline,
     description: settings.general.description,
     url: settings.general.url,
     author: settings.general.author,
-    profileImage: resolveImageUrl(settings.general.profileImage),
+    logoImage,
+    logoIcon,
+    aboutImage,
+    profileImage: aboutImage,
     location: settings.contact.location,
     workingHours: settings.contact.workingHours,
   };

@@ -20,7 +20,9 @@ export default async function AdminSettingsPage() {
         <SettingsForms
           settings={settings}
           maintenance={maintenance}
-          profilePreview={config.profileImage}
+          logoPreview={config.logoImage}
+          logoIconPreview={config.logoIcon}
+          aboutPreview={config.aboutImage}
         />
       </div>
     </div>

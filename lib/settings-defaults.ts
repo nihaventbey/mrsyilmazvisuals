@@ -7,6 +7,8 @@ export const defaultSettings: SiteSettings = {
     description:
       "Doğum, hamile, yenidoğan ve bebek çekimlerinde samimi ve güven veren bir deneyim sunuyorum. 2016'dan beri fotoğrafçılık yapıyor; 2019'dan itibaren doğum fotoğrafçılığına odaklanıyorum.",
     author: "Melike Yılmaz",
+    logoImage: "/images/logo.svg",
+    logoIcon: "/images/logo.svg",
     profileImage: "/images/melike-yilmaz.jpg",
     url: "https://mrsyilmazvisuals.com",
   },
@@ -24,6 +26,7 @@ export const defaultSettings: SiteSettings = {
   about: {
     pageDescription:
       "Doğum, hamile, yenidoğan ve bebek çekimlerinde ailelerin en değerli anlarını samimi, rahat ve güven veren bir ortamda ölümsüzleştiriyorum.",
+    aboutImage: "/images/melike-yilmaz.jpg",
     bioParagraphs: [
       "Ben Melike Yılmaz. 2016'dan beri profesyonel fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, hamile, yenidoğan ve bebek çekimlerine odaklandım. Her çekimde önce sizinle tanışıyor, süreci birlikte planlıyor ve rahat hissetmenizi sağlıyorum.",
       "Doğum fotoğrafçılığında Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalıyım. Doğum öncesinde ailelerle iletişim kurmayı, herkesin hazır ve huzurlu olmasını önemsiyorum — çünkü en güzel kareler, güvende hissedildiğiniz anlarda doğar.",

@@ -1,22 +1,29 @@
 "use client";
 
-import { useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import * as THREE from "three";
-import { heroCaptions, heroPalettes } from "./heroData";
+import type { ResolvedHeroCard } from "@/lib/hero";
 
 type ProgressRef = RefObject<number>;
-
-const CARD_COUNT = heroCaptions.length;
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 }
 
-/** Draws an elegant polaroid-style photograph as a canvas texture. */
-function createPolaroidTexture(index: number): THREE.CanvasTexture {
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function createPolaroidTexture(card: ResolvedHeroCard): Promise<THREE.CanvasTexture> {
   const w = 512;
   const h = 640;
   const border = 26;
@@ -26,20 +33,43 @@ function createPolaroidTexture(index: number): THREE.CanvasTexture {
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
 
-  // Paper frame
   ctx.fillStyle = "#fdfaf4";
   ctx.fillRect(0, 0, w, h);
 
-  // Photo area with warm gradient + highlight, evoking film tones
-  const [light, mid, dark] = heroPalettes[index % heroPalettes.length];
   const photoW = w - border * 2;
   const photoH = h - border - bottom;
-  const gradient = ctx.createLinearGradient(border, border, w - border, photoH);
-  gradient.addColorStop(0, light);
-  gradient.addColorStop(0.55, mid);
-  gradient.addColorStop(1, dark);
-  ctx.fillStyle = gradient;
-  ctx.fillRect(border, border, photoW, photoH);
+  const [light, mid, dark] = card.palette;
+
+  if (card.imageUrl) {
+    try {
+      const img = await loadImage(card.imageUrl);
+      const scale = Math.max(photoW / img.width, photoH / img.height);
+      const drawW = img.width * scale;
+      const drawH = img.height * scale;
+      const dx = border + (photoW - drawW) / 2;
+      const dy = border + (photoH - drawH) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(border, border, photoW, photoH);
+      ctx.clip();
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+      ctx.restore();
+    } catch {
+      const gradient = ctx.createLinearGradient(border, border, w - border, photoH);
+      gradient.addColorStop(0, light);
+      gradient.addColorStop(0.55, mid);
+      gradient.addColorStop(1, dark);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(border, border, photoW, photoH);
+    }
+  } else {
+    const gradient = ctx.createLinearGradient(border, border, w - border, photoH);
+    gradient.addColorStop(0, light);
+    gradient.addColorStop(0.55, mid);
+    gradient.addColorStop(1, dark);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(border, border, photoW, photoH);
+  }
 
   const glow = ctx.createRadialGradient(
     border + photoW * 0.35,
@@ -49,31 +79,16 @@ function createPolaroidTexture(index: number): THREE.CanvasTexture {
     border + photoH * 0.3,
     photoW * 0.7,
   );
-  glow.addColorStop(0, "rgba(255, 248, 230, 0.75)");
+  glow.addColorStop(0, "rgba(255, 248, 230, 0.45)");
   glow.addColorStop(1, "rgba(255, 248, 230, 0)");
   ctx.fillStyle = glow;
   ctx.fillRect(border, border, photoW, photoH);
 
-  // Soft vignette
-  const vignette = ctx.createRadialGradient(
-    w / 2,
-    border + photoH / 2,
-    photoW * 0.3,
-    w / 2,
-    border + photoH / 2,
-    photoW * 0.85,
-  );
-  vignette.addColorStop(0, "rgba(60, 40, 20, 0)");
-  vignette.addColorStop(1, "rgba(60, 40, 20, 0.28)");
-  ctx.fillStyle = vignette;
-  ctx.fillRect(border, border, photoW, photoH);
-
-  // Handwritten-style caption on the bottom margin
   ctx.fillStyle = "#5a4636";
   ctx.font = "italic 44px Georgia, 'Playfair Display', serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(heroCaptions[index % heroCaptions.length], w / 2, h - bottom / 2 - 6);
+  ctx.fillText(card.caption, w / 2, h - bottom / 2 - 6);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 4;
@@ -90,30 +105,22 @@ type CardTransform = {
   floatSeed: number;
 };
 
-/** Deterministic pseudo-random so SSR/CSR and re-renders agree. */
 function seeded(i: number, salt: number): number {
   const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
-function buildTransforms(): CardTransform[] {
+function buildTransforms(count: number): CardTransform[] {
   const golden = 2.399963;
-  return Array.from({ length: CARD_COUNT }, (_, i) => {
-    // Start: a neat pile of photographs in the lower half of the frame,
-    // leaving the upper area free for the headline
+  return Array.from({ length: count }, (_, i) => {
     const start = new THREE.Vector3(
       (seeded(i, 1) - 0.5) * 0.35,
       -1.25 + (seeded(i, 2) - 0.5) * 0.25,
       i * 0.035,
     );
-    const startRot = new THREE.Euler(
-      0,
-      0,
-      (seeded(i, 3) - 0.5) * 0.5,
-    );
+    const startRot = new THREE.Euler(0, 0, (seeded(i, 3) - 0.5) * 0.5);
 
-    // End: golden-angle spiral spreading across the whole viewport
-    const f = (i + 0.7) / CARD_COUNT;
+    const f = (i + 0.7) / count;
     const angle = i * golden;
     const radius = 1.1 + 4.6 * Math.sqrt(f);
     const end = new THREE.Vector3(
@@ -124,7 +131,7 @@ function buildTransforms(): CardTransform[] {
     const endRot = new THREE.Euler(
       (seeded(i, 5) - 0.5) * 0.35,
       (seeded(i, 6) - 0.5) * 0.5,
-      (seeded(i, 7) - 0.5) * 0.3,
+      (seeded(i, 7) - 0.5) * 0.5,
     );
 
     return {
@@ -132,22 +139,35 @@ function buildTransforms(): CardTransform[] {
       end,
       startRot,
       endRot,
-      stagger: (i / CARD_COUNT) * 0.3,
+      stagger: (i / count) * 0.3,
       floatSeed: seeded(i, 8) * Math.PI * 2,
     };
   });
 }
 
-function PhotoCards({ progressRef }: { progressRef: ProgressRef }) {
+function PhotoCards({
+  progressRef,
+  cards,
+}: {
+  progressRef: ProgressRef;
+  cards: ResolvedHeroCard[];
+}) {
   const group = useRef<THREE.Group>(null);
-  const transforms = useMemo(buildTransforms, []);
-  const textures = useMemo(
-    () => transforms.map((_, i) => createPolaroidTexture(i)),
-    [transforms],
-  );
+  const transforms = useMemo(() => buildTransforms(cards.length), [cards.length]);
+  const [textures, setTextures] = useState<THREE.CanvasTexture[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(cards.map((card) => createPolaroidTexture(card))).then((next) => {
+      if (!cancelled) setTextures(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cards]);
 
   useFrame(({ clock }) => {
-    if (!group.current) return;
+    if (!group.current || textures.length !== cards.length) return;
     const t = clock.elapsedTime;
     const progress = progressRef.current ?? 0;
 
@@ -156,7 +176,6 @@ function PhotoCards({ progressRef }: { progressRef: ProgressRef }) {
       const p = smoothstep(tf.stagger, tf.stagger + 0.6, progress);
 
       child.position.lerpVectors(tf.start, tf.end, p);
-      // Gentle breathing while idle, calmer once spread out
       const idle = 1 - p * 0.65;
       child.position.y +=
         Math.sin(t * 0.7 + tf.floatSeed) * 0.05 * idle +
@@ -170,15 +189,16 @@ function PhotoCards({ progressRef }: { progressRef: ProgressRef }) {
         THREE.MathUtils.lerp(tf.startRot.z, tf.endRot.z, p),
       );
 
-      const scale = 1 + p * 0.35;
-      child.scale.setScalar(scale);
+      child.scale.setScalar(1 + p * 0.35);
     });
   });
+
+  if (textures.length !== cards.length) return null;
 
   return (
     <group ref={group}>
       {transforms.map((_, i) => (
-        <mesh key={i} castShadow={false} receiveShadow={false}>
+        <mesh key={cards[i].id} castShadow={false} receiveShadow={false}>
           <planeGeometry args={[1.5, 1.875]} />
           <meshBasicMaterial map={textures[i]} toneMapped={false} />
         </mesh>
@@ -187,7 +207,6 @@ function PhotoCards({ progressRef }: { progressRef: ProgressRef }) {
   );
 }
 
-/** Camera: pointer parallax + a slow dolly-out as the photos spread. */
 function CameraRig({ progressRef }: { progressRef: ProgressRef }) {
   const { camera, pointer } = useThree();
 
@@ -206,9 +225,11 @@ function CameraRig({ progressRef }: { progressRef: ProgressRef }) {
 
 export default function Hero3D({
   progressRef,
+  cards,
   onContextLost,
 }: {
   progressRef: ProgressRef;
+  cards: ResolvedHeroCard[];
   onContextLost?: () => void;
 }) {
   return (
@@ -226,8 +247,7 @@ export default function Hero3D({
       }}
     >
       <ambientLight intensity={1} color="#fff6e6" />
-
-      <PhotoCards progressRef={progressRef} />
+      <PhotoCards progressRef={progressRef} cards={cards} />
       <Sparkles
         count={60}
         scale={[15, 9, 6]}

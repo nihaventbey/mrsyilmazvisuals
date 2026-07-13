@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { MaintenanceSettings } from "@/lib/maintenance";
+import { SiteLogo } from "@/components/ui/SiteLogo";
 import type { ContactChannel, SiteConfig } from "@/lib/settings";
 
 type Props = {
@@ -104,24 +104,16 @@ export function MaintenanceView({
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-12 sm:px-8 sm:py-16">
         <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl">
           <div className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-8 pt-10 text-center sm:px-12 sm:pt-12">
-            <div className="relative mx-auto mb-6 h-24 w-24 sm:h-28 sm:w-28">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-gold/60 via-champagne to-gold-dark/40 opacity-80" />
-              <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-cream bg-sand/60 shadow-inner">
-                <Image
-                  src={config.profileImage}
-                  alt={config.author}
-                  fill
-                  priority
-                  sizes="112px"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
-            <p className="font-serif text-2xl tracking-wide text-espresso sm:text-3xl">
-              {config.name}
-            </p>
-            <p className="mt-2 text-sm tracking-[0.22em] text-gold-dark uppercase">
+            <SiteLogo
+              src={config.logoIcon}
+              name={config.name}
+              href={undefined}
+              variant="mark"
+              showName={false}
+              className="mx-auto w-fit"
+              imageClassName="h-20 w-20 rounded-2xl border-0 bg-transparent shadow-none"
+            />
+            <p className="mt-4 text-sm tracking-[0.22em] text-gold-dark uppercase">
               {config.tagline}
             </p>
           </div>

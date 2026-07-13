@@ -107,11 +107,19 @@ export async function Footer({
       </div>
 
       <div className="border-t border-espresso/10">
-        <div className="container-page flex flex-col items-center justify-between gap-2 py-6 text-xs text-mist sm:flex-row">
+        <div className="container-page flex flex-col items-center justify-between gap-3 py-6 text-xs text-mist sm:flex-row">
           <p>
             © {year} {siteName}. Tüm hakları saklıdır.
           </p>
-          <p>{location}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link
+              href="/gizlilik-politikasi"
+              className="text-mocha transition-colors hover:text-espresso hover:underline hover:underline-offset-4"
+            >
+              Gizlilik Politikası
+            </Link>
+            <span>{location}</span>
+          </div>
         </div>
       </div>
     </footer>

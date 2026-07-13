@@ -35,7 +35,7 @@ export default async function AboutPage() {
       <section className="container-page py-20">
         <div className="grid items-start gap-12 lg:grid-cols-2">
           <AuthorPhoto
-            src={config.profileImage}
+            src={config.aboutImage}
             alt={config.author}
             className="aspect-[4/5]"
             priority

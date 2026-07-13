@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 const adminLinks = [
   { href: "/admin", label: "Genel Bakış" },
   { href: "/admin/ayarlar", label: "Site Ayarları" },
+  { href: "/admin/hero", label: "Hero Kartları" },
   { href: "/admin/kategoriler", label: "Kategoriler" },
   { href: "/admin/portfolyo", label: "Portfolyo" },
   { href: "/admin/blog", label: "Blog" },

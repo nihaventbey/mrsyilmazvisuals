@@ -4,14 +4,22 @@ import { FeaturedGallery } from "@/components/home/FeaturedGallery";
 import { AboutPreview } from "@/components/home/AboutPreview";
 import { BlogPreview } from "@/components/home/BlogPreview";
 import { CtaBand } from "@/components/home/CtaBand";
+import { getHeroCards } from "@/lib/hero";
 import { getSiteConfig } from "@/lib/settings";
 
 export default async function HomePage() {
-  const config = await getSiteConfig();
+  const [config, heroCards] = await Promise.all([
+    getSiteConfig(),
+    getHeroCards(),
+  ]);
 
   return (
     <>
-      <Hero tagline={config.tagline} description={config.description} />
+      <Hero
+        tagline={config.tagline}
+        description={config.description}
+        cards={heroCards}
+      />
       <ServicesGrid />
       <FeaturedGallery />
       <AboutPreview />

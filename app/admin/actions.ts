@@ -10,6 +10,7 @@ import {
   parseValues,
   splitParagraphs,
 } from "@/lib/settings";
+import type { HeroCard } from "@/lib/hero";
 
 // ================================ auth =================================
 
@@ -64,6 +65,7 @@ function revalidateSite() {
     "/sss",
     "/iletisim",
     "/bakim",
+    "/gizlilik-politikasi",
   ]) {
     revalidatePath(p, "layout");
   }
@@ -462,19 +464,36 @@ export async function saveGeneralSettings(
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
-  const file = formData.get("profile_file") as File | null;
+  const logoFile = formData.get("logo_file") as File | null;
+  const logoIconFile = formData.get("logo_icon_file") as File | null;
+  let logoImage = String(formData.get("logo_image") ?? "");
+  let logoIcon = String(formData.get("logo_icon") ?? "");
   let profileImage = String(formData.get("profile_image") ?? "");
 
-  if (file && file.size > 0) {
-    const ext = file.name.split(".").pop() || "jpg";
-    profileImage = `profile/${Date.now()}.${ext}`;
+  if (logoFile && logoFile.size > 0) {
+    const ext = logoFile.name.split(".").pop() || "png";
+    logoImage = `logo/wordmark-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("site")
-      .upload(profileImage, file, { contentType: file.type, upsert: true });
+      .upload(logoImage, logoFile, { contentType: logoFile.type, upsert: true });
     if (uploadError) {
       return {
         status: "error",
-        message: `Profil fotoğrafı yüklenemedi: ${uploadError.message}`,
+        message: `Üst menü logosu yüklenemedi: ${uploadError.message}`,
+      };
+    }
+  }
+
+  if (logoIconFile && logoIconFile.size > 0) {
+    const ext = logoIconFile.name.split(".").pop() || "png";
+    logoIcon = `logo/icon-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("site")
+      .upload(logoIcon, logoIconFile, { contentType: logoIconFile.type, upsert: true });
+    if (uploadError) {
+      return {
+        status: "error",
+        message: `İkon logosu yüklenemedi: ${uploadError.message}`,
       };
     }
   }
@@ -485,7 +504,9 @@ export async function saveGeneralSettings(
       tagline: String(formData.get("tagline") ?? ""),
       description: String(formData.get("description") ?? ""),
       author: String(formData.get("author") ?? ""),
-      profileImage,
+      logoImage,
+      logoIcon: logoIcon || logoImage,
+      profileImage: profileImage || logoImage,
       url: String(formData.get("url") ?? ""),
     });
   } catch (error) {
@@ -533,10 +554,27 @@ export async function saveAboutSettings(
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
+  const aboutFile = formData.get("about_image_file") as File | null;
+  let aboutImage = String(formData.get("about_image") ?? "");
+
+  if (aboutFile && aboutFile.size > 0) {
+    const ext = aboutFile.name.split(".").pop() || "jpg";
+    aboutImage = `about/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("site")
+      .upload(aboutImage, aboutFile, { contentType: aboutFile.type, upsert: true });
+    if (uploadError) {
+      return {
+        status: "error",
+        message: `Hakkımda görseli yüklenemedi: ${uploadError.message}`,
+      };
+    }
+  }
 
   try {
     await upsertSetting(supabase, "about", {
       pageDescription: String(formData.get("page_description") ?? ""),
+      aboutImage,
       bioParagraphs: splitParagraphs(String(formData.get("bio_paragraphs") ?? "")),
       previewParagraphs: splitParagraphs(
         String(formData.get("preview_paragraphs") ?? ""),
@@ -605,6 +643,82 @@ export async function saveMaintenanceSettings(
   revalidatePath("/admin/ayarlar");
   revalidatePath("/admin");
   return { status: "success", message: "Bakım modu ayarları kaydedildi." };
+}
+
+// ================================ hero =================================
+
+export async function saveHeroSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+
+  let cards: HeroCard[];
+  try {
+    cards = JSON.parse(String(formData.get("cards_json") ?? "[]")) as HeroCard[];
+  } catch {
+    return { status: "error", message: "Kart verisi okunamadı." };
+  }
+
+  if (!Array.isArray(cards) || cards.length === 0) {
+    return { status: "error", message: "En az bir hero kartı olmalı." };
+  }
+
+  const updatedCards: HeroCard[] = [];
+
+  for (const card of cards) {
+    const caption = String(card.caption ?? "").trim();
+    if (!caption) {
+      return { status: "error", message: "Tüm kartların başlığı dolu olmalı." };
+    }
+
+    let image = String(card.image ?? "");
+    if (image.startsWith("http")) {
+      const marker = "/storage/v1/object/public/site/";
+      const idx = image.indexOf(marker);
+      image = idx >= 0 ? image.slice(idx + marker.length) : "";
+    }
+
+    const file = formData.get(`image_${card.id}`) as File | null;
+    if (file && file.size > 0) {
+      const ext = file.name.split(".").pop() || "jpg";
+      image = `hero/${card.id}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("site")
+        .upload(image, file, { contentType: file.type, upsert: true });
+      if (uploadError) {
+        return {
+          status: "error",
+          message: `Görsel yüklenemedi (${caption}): ${uploadError.message}`,
+        };
+      }
+    }
+
+    const palette = Array.isArray(card.palette) && card.palette.length === 3
+      ? card.palette.map(String)
+      : ["#f0e2cc", "#c9a468", "#8f6f42"];
+
+    updatedCards.push({
+      id: String(card.id),
+      caption,
+      image,
+      palette: palette as [string, string, string],
+      enabled: card.enabled !== false,
+    });
+  }
+
+  try {
+    await upsertSetting(supabase, "hero", { cards: updatedCards });
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/hero");
+  return { status: "success", message: "Hero kartları kaydedildi." };
 }
 
 // ============================= categories ==============================

@@ -40,11 +40,15 @@ function Section({
 export function SettingsForms({
   settings,
   maintenance,
-  profilePreview,
+  logoPreview,
+  logoIconPreview,
+  aboutPreview,
 }: {
   settings: SiteSettings;
   maintenance: MaintenanceSettings;
-  profilePreview: string;
+  logoPreview: string;
+  logoIconPreview: string;
+  aboutPreview: string;
 }) {
   const { general, contact, about, home } = settings;
 
@@ -89,9 +93,11 @@ export function SettingsForms({
 
       <Section
         title="Genel"
-        description="Site adı, slogan, açıklama ve profil bilgileri."
+        description="Site adı, slogan, logo ve temel bilgiler."
       >
         <ActionForm action={saveGeneralSettings} submitLabel="Genel Ayarları Kaydet">
+          <input type="hidden" name="logo_image" value={general.logoImage} />
+          <input type="hidden" name="logo_icon" value={general.logoIcon} />
           <input type="hidden" name="profile_image" value={general.profileImage} />
           <div className="grid gap-4 sm:grid-cols-2">
             <InputField label="Site Adı" name="name" defaultValue={general.name} required />
@@ -105,22 +111,49 @@ export function SettingsForms({
             className="min-h-24"
           />
           <InputField label="Site URL" name="url" defaultValue={general.url} />
-          <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-champagne">
-              <Image
-                src={profilePreview}
-                alt={general.author}
-                fill
-                sizes="80px"
-                className="object-cover"
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
+              <p className="text-sm font-medium text-espresso">Üst menü logosu (yatay)</p>
+              <p className="text-xs text-mocha">
+                Sol üst köşede görünür. Şeffaf arka planlı PNG veya SVG önerilir.
+              </p>
+              <div className="relative flex h-16 w-full items-center justify-start overflow-hidden rounded-lg border border-gold/20 bg-cream px-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoPreview}
+                  alt="Üst menü logosu önizleme"
+                  className="max-h-12 w-auto max-w-full object-contain"
+                />
+              </div>
+              <InputField
+                label="Yatay logo yükle"
+                name="logo_file"
+                type="file"
+                accept="image/*"
               />
             </div>
-            <InputField
-              label="Profil Fotoğrafı Değiştir"
-              name="profile_file"
-              type="file"
-              accept="image/*"
-            />
+
+            <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
+              <p className="text-sm font-medium text-espresso">İkon logosu (yuvarlak)</p>
+              <p className="text-xs text-mocha">
+                Favicon, bakım sayfası ve küçük alanlar için. Kare veya yuvarlak ikon.
+              </p>
+              <div className="relative mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-gold/25 bg-cream">
+                <Image
+                  src={logoIconPreview}
+                  alt="İkon logosu önizleme"
+                  fill
+                  sizes="80px"
+                  className="object-contain p-2"
+                />
+              </div>
+              <InputField
+                label="İkon logo yükle"
+                name="logo_icon_file"
+                type="file"
+                accept="image/*"
+              />
+            </div>
           </div>
         </ActionForm>
       </Section>
@@ -175,6 +208,24 @@ export function SettingsForms({
         description="Hakkımda sayfası ve ana sayfa önizleme metinleri."
       >
         <ActionForm action={saveAboutSettings} submitLabel="Hakkımda İçeriğini Kaydet">
+          <input type="hidden" name="about_image" value={about.aboutImage} />
+          <div className="flex items-center gap-4">
+            <div className="relative h-28 w-24 overflow-hidden rounded-xl bg-champagne">
+              <Image
+                src={aboutPreview}
+                alt="Hakkımda görseli"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </div>
+            <InputField
+              label="Hakkımda Görseli Değiştir"
+              name="about_image_file"
+              type="file"
+              accept="image/*"
+            />
+          </div>
           <TextareaField
             label="Sayfa Açıklaması"
             name="page_description"

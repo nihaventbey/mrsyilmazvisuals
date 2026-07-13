@@ -5,9 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navLinks } from "@/lib/site";
 import { Button } from "@/components/ui/Button";
+import { SiteLogo } from "@/components/ui/SiteLogo";
 import { cn } from "@/lib/utils";
 
-export function Header({ siteName }: { siteName: string }) {
+export function Header({
+  siteName,
+  logoSrc,
+}: {
+  siteName: string;
+  logoSrc: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -40,12 +47,12 @@ export function Header({ siteName }: { siteName: string }) {
       )}
     >
       <div className="container-page flex h-20 items-center justify-between">
-        <Link
-          href="/"
-          className="font-serif text-xl tracking-wide text-espresso"
-        >
-          {siteName}
-        </Link>
+        <SiteLogo
+          src={logoSrc}
+          name={siteName}
+          variant="wordmark"
+          showName={false}
+        />
 
         <nav className="hidden items-center gap-8 lg:flex">
           {navLinks.map((link) => {

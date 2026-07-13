@@ -12,7 +12,7 @@ export async function AboutPreview() {
     <section className="container-page py-20">
       <div className="grid items-center gap-12 lg:grid-cols-2">
         <AuthorPhoto
-          src={config.profileImage}
+          src={config.aboutImage}
           alt={config.author}
           className="aspect-[4/5] max-w-md lg:mx-0"
         />

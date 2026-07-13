@@ -19,7 +19,7 @@ export default async function SiteLayout({
 
   return (
     <>
-      <Header siteName={config.name} />
+      <Header siteName={config.name} logoSrc={config.logoImage} />
       <main className="flex-1">{children}</main>
       <Footer
         siteName={config.name}

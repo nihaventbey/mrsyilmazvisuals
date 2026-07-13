@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
 import { HeroFallback } from "@/components/home/HeroFallback";
+import type { ResolvedHeroCard } from "@/lib/hero";
 
 const Hero3D = dynamic(() => import("./Hero3D"), {
   ssr: false,
@@ -26,9 +27,11 @@ function clamp01(x: number): number {
 export function Hero({
   tagline,
   description,
+  cards,
 }: {
   tagline: string;
   description: string;
+  cards: ResolvedHeroCard[];
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -112,11 +115,12 @@ export function Hero({
           <div className="absolute inset-0">
             <Hero3D
               progressRef={progressRef}
+              cards={cards}
               onContextLost={() => setWebglOk(false)}
             />
           </div>
         ) : (
-          <HeroFallback />
+          <HeroFallback cards={cards} />
         )}
 
         {/* Intro: title over the photo pile */}
