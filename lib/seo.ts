@@ -1,6 +1,38 @@
 import type { SiteConfig, SocialLink } from "@/lib/settings";
 import { toWhatsAppDigits } from "@/lib/whatsapp";
 
+const FALLBACK_SITE_URL = "https://www.mrsyilmaz.com";
+
+/**
+ * Pick a public site origin. Rejects accidental Supabase / localhost values
+ * (e.g. NEXT_PUBLIC_SITE_URL mistakenly set to the Supabase project URL).
+ */
+export function resolvePublicSiteUrl(
+  ...candidates: Array<string | null | undefined>
+): string {
+  for (const raw of candidates) {
+    const cleaned = String(raw ?? "").trim().replace(/\/$/, "");
+    if (!cleaned) continue;
+    try {
+      const url = new URL(cleaned);
+      if (url.protocol !== "http:" && url.protocol !== "https:") continue;
+      const host = url.hostname.toLowerCase();
+      if (
+        host.endsWith(".supabase.co") ||
+        host === "localhost" ||
+        host.endsWith(".local") ||
+        host === "127.0.0.1"
+      ) {
+        continue;
+      }
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      // try next candidate
+    }
+  }
+  return FALLBACK_SITE_URL;
+}
+
 export function absoluteUrl(path: string, baseUrl: string): string {
   const base = baseUrl.replace(/\/$/, "");
   return path.startsWith("http")

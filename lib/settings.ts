@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { defaultSettings } from "@/lib/settings-defaults";
+import { resolvePublicSiteUrl } from "@/lib/seo";
 import {
   createPublicClient,
   isSupabaseConfigured,
@@ -178,7 +179,11 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
     name: settings.general.name,
     tagline: settings.general.tagline,
     description: settings.general.description,
-    url: settings.general.url,
+    url: resolvePublicSiteUrl(
+      process.env.NEXT_PUBLIC_SITE_URL,
+      settings.general.url,
+      defaultSettings.general.url,
+    ),
     author: settings.general.author,
     logoImage,
     logoIcon,

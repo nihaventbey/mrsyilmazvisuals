@@ -2,10 +2,7 @@ import { getSiteConfig } from "@/lib/settings";
 
 export async function GET() {
   const config = await getSiteConfig();
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? config.url).replace(
-    /\/$/,
-    "",
-  );
+  const base = config.url.replace(/\/$/, "");
 
   const catalog = {
     linkset: [

@@ -34,10 +34,7 @@ function sha256Of(relativePublicPath: string): string {
 
 export async function GET() {
   const config = await getSiteConfig();
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? config.url).replace(
-    /\/$/,
-    "",
-  );
+  const base = config.url.replace(/\/$/, "");
 
   const skills = SKILLS.map((skill) => {
     const href = `/.well-known/agent-skills/${skill.file}`;

@@ -4,7 +4,7 @@ import { getSiteConfig } from "@/lib/settings";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const config = await getSiteConfig();
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? config.url;
+  const base = config.url.replace(/\/$/, "");
 
   const staticRoutes = [
     "",
