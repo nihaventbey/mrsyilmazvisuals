@@ -16,6 +16,10 @@ import {
   fetchInstagramGraphPosts,
   getInstagramGraphStatus,
 } from "@/lib/instagram-graph";
+import {
+  normalizeInstagramUsername,
+  slugifyGiveawayTitle,
+} from "@/lib/giveaways";
 
 // ================================ auth =================================
 
@@ -69,6 +73,7 @@ function revalidateSite() {
     "/blog",
     "/sss",
     "/iletisim",
+    "/cekilis",
     "/bakim",
     "/gizlilik-politikasi",
   ]) {
@@ -946,4 +951,119 @@ export async function updateCategory(
   revalidateSite();
   revalidatePath("/admin/kategoriler");
   return { status: "success", message: "Kategori güncellendi." };
+}
+
+// ============================== giveaways ==============================
+
+function collectUsernames(formData: FormData, key: string): string[] {
+  return formData
+    .getAll(key)
+    .map((value) => normalizeInstagramUsername(String(value ?? "")))
+    .filter(Boolean);
+}
+
+export async function upsertGiveaway(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const id = String(formData.get("id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const drawDate = String(formData.get("draw_date") ?? "").trim();
+  let slug = String(formData.get("slug") ?? "").trim();
+  if (!slug && title) slug = slugifyGiveawayTitle(title);
+
+  if (!title || !drawDate || !slug) {
+    return {
+      status: "error",
+      message: "Başlık, slug ve çekiliş tarihi zorunludur.",
+    };
+  }
+
+  const payload = {
+    title,
+    slug,
+    draw_date: drawDate,
+    description: String(formData.get("description") ?? "").trim(),
+    published: formData.get("published") === "on",
+    updated_at: new Date().toISOString(),
+  };
+
+  const winners = collectUsernames(formData, "winners");
+  const backups = collectUsernames(formData, "backups");
+
+  let giveawayId = id;
+
+  if (id) {
+    const { error } = await supabase
+      .from("giveaways")
+      .update(payload)
+      .eq("id", id);
+    if (error) {
+      return { status: "error", message: `Kaydedilemedi: ${error.message}` };
+    }
+  } else {
+    const { data, error } = await supabase
+      .from("giveaways")
+      .insert(payload)
+      .select("id")
+      .single();
+    if (error || !data) {
+      return {
+        status: "error",
+        message: `Kaydedilemedi: ${error?.message ?? "bilinmeyen hata"}`,
+      };
+    }
+    giveawayId = data.id;
+  }
+
+  await supabase.from("giveaway_entrants").delete().eq("giveaway_id", giveawayId);
+
+  const entrantRows = [
+    ...winners.map((username, index) => ({
+      giveaway_id: giveawayId,
+      role: "winner" as const,
+      username,
+      sort_order: index,
+    })),
+    ...backups.map((username, index) => ({
+      giveaway_id: giveawayId,
+      role: "backup" as const,
+      username,
+      sort_order: index,
+    })),
+  ];
+
+  if (entrantRows.length > 0) {
+    const { error: entrantError } = await supabase
+      .from("giveaway_entrants")
+      .insert(entrantRows);
+    if (entrantError) {
+      return {
+        status: "error",
+        message: `Katılımcılar kaydedilemedi: ${entrantError.message}`,
+      };
+    }
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/cekilis");
+  revalidatePath("/sitemap.xml");
+
+  if (!id) {
+    redirect(`/admin/cekilis/${giveawayId}`);
+  }
+
+  return { status: "success", message: "Çekiliş kaydedildi." };
+}
+
+export async function deleteGiveaway(formData: FormData): Promise<void> {
+  const supabase = await authedClient();
+  await supabase
+    .from("giveaways")
+    .delete()
+    .eq("id", String(formData.get("id") ?? ""));
+  revalidateSite();
+  revalidatePath("/admin/cekilis");
+  revalidatePath("/sitemap.xml");
 }
