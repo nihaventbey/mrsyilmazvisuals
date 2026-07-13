@@ -18,6 +18,13 @@ export type ResolvedInstagramPost = InstagramPost & {
   imageUrl: string | null;
 };
 
+export type InstagramFeedResult = {
+  settings: InstagramSettings;
+  posts: ResolvedInstagramPost[];
+  /** Why posts are empty when the section is enabled (dev / admin hint). */
+  emptyReason?: string;
+};
+
 function normalizePost(value: unknown, index: number): InstagramPost | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Partial<InstagramPost>;
@@ -44,8 +51,11 @@ function mergeInstagramSettings(value: unknown): InstagramSettings {
   const postLimit = Number(partial.postLimit);
   const source = partial.source === "manual" ? "manual" : "graph";
 
+  const rawEnabled = (partial as { enabled?: unknown }).enabled;
+  const enabled = rawEnabled === true || rawEnabled === "true";
+
   return {
-    enabled: partial.enabled === true,
+    enabled,
     source,
     postLimit: Number.isFinite(postLimit)
       ? Math.min(12, Math.max(3, postLimit))
@@ -85,28 +95,64 @@ export const getInstagramSettings = cache(async (): Promise<InstagramSettings> =
   return mergeInstagramSettings(data?.value);
 });
 
-export const getInstagramFeed = cache(async (): Promise<{
-  settings: InstagramSettings;
-  posts: ResolvedInstagramPost[];
-}> => {
+export const getInstagramFeed = cache(async (): Promise<InstagramFeedResult> => {
   const settings = await getInstagramSettings();
 
   if (!settings.enabled) {
     return { settings, posts: [] };
   }
 
-  if (settings.source === "graph" && isInstagramGraphConfigured()) {
+  if (settings.source === "graph") {
+    if (!isInstagramGraphConfigured()) {
+      const emptyReason =
+        "INSTAGRAM_ACCESS_TOKEN bu ortamda yok. Vercel’deki token’ı .env.local dosyasına ekleyip `npm run dev` sürecini yeniden başlatın.";
+      console.error(`[instagram] ${emptyReason}`);
+      const manual = resolveManualPosts(settings);
+      return {
+        settings,
+        posts: manual,
+        emptyReason: manual.length ? undefined : emptyReason,
+      };
+    }
+
     try {
       const posts = await fetchInstagramGraphPosts(settings.postLimit);
       if (posts.length > 0) {
         return { settings, posts };
       }
-    } catch {
-      // Graph API başarısız olursa manuel gönderilere düş.
+      const manual = resolveManualPosts(settings);
+      return {
+        settings,
+        posts: manual,
+        emptyReason:
+          manual.length > 0
+            ? undefined
+            : "Graph API yanıt verdi ama gönderi dönmedi. INSTAGRAM_USER_ID doğru mu, hesapta medya var mı kontrol edin.",
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[instagram] Graph feed failed:", message);
+      const manual = resolveManualPosts(settings);
+      return {
+        settings,
+        posts: manual,
+        emptyReason:
+          manual.length > 0
+            ? undefined
+            : `Graph API hatası: ${message}`,
+      };
     }
   }
 
-  return { settings, posts: resolveManualPosts(settings) };
+  const manual = resolveManualPosts(settings);
+  return {
+    settings,
+    posts: manual,
+    emptyReason:
+      manual.length > 0
+        ? undefined
+        : "Manuel kaynak seçili ama yayınlanabilir gönderi yok.",
+  };
 });
 
 export type {

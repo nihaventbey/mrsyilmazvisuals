@@ -885,6 +885,7 @@ export async function saveInstagramSettings(
 
   revalidateSite();
   revalidatePath("/admin/instagram");
+  revalidatePath("/", "layout");
   return { status: "success", message: "Instagram akışı kaydedildi." };
 }
 
@@ -910,12 +911,15 @@ export async function testInstagramGraphConnection(): Promise<FormState> {
     const posts = await fetchInstagramGraphPosts(6);
     return {
       status: "success",
-      message: `@${status.username} bağlı — ${posts.length} gönderi çekildi.`,
+      message: `@${status.username} bağlı (${status.host ?? "graph"}) — ${posts.length} gönderi çekildi.`,
     };
   } catch (error) {
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Gönderiler alınamadı.",
+      message:
+        `Profil açıldı ama medya alınamadı: ${
+          error instanceof Error ? error.message : "bilinmeyen hata"
+        }. Facebook Login token kullanıyorsanız INSTAGRAM_USER_ID (IG profesyonel hesap ID) gerekli olabilir.`,
     };
   }
 }

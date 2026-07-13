@@ -123,12 +123,26 @@ export function InstagramFeedManager({
           <p>
             API bağlı: <strong>@{graphStatus.username}</strong>
             {graphStatus.userId ? ` (${graphStatus.userId})` : ""}
+            {graphStatus.host ? (
+              <span className="mt-1 block text-xs opacity-80">
+                Host: {graphStatus.host}
+              </span>
+            ) : null}
           </p>
         ) : graphStatus.configured ? (
           <p>Token tanımlı ama bağlantı kurulamadı: {graphStatus.error}</p>
         ) : (
           <p>{graphStatus.error}</p>
         )}
+        {!graphStatus.configured ? (
+          <p className="mt-2 text-xs opacity-90">
+            Vercel → Project → Settings → Environment Variables içine{" "}
+            <code className="rounded bg-white/70 px-1">INSTAGRAM_ACCESS_TOKEN</code>
+            {" "}ekleyin; isteğe bağlı{" "}
+            <code className="rounded bg-white/70 px-1">INSTAGRAM_USER_ID</code>.
+            Kaydettikten sonra redeploy gerekir.
+          </p>
+        ) : null}
       </div>
 
       <label className="flex items-start gap-3 rounded-xl border border-espresso/10 bg-cream/60 p-4">

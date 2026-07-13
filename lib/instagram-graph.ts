@@ -1,13 +1,12 @@
 import type { ResolvedInstagramPost } from "@/lib/instagram";
 
-const GRAPH = "https://graph.instagram.com";
 const FIELDS =
   "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp";
 
 type GraphMedia = {
   id: string;
   caption?: string;
-  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | string;
   media_url?: string;
   thumbnail_url?: string;
   permalink: string;
@@ -15,7 +14,7 @@ type GraphMedia = {
 
 type GraphMediaResponse = {
   data?: GraphMedia[];
-  error?: { message: string; code?: number };
+  error?: { message: string; code?: number; error_subcode?: number };
 };
 
 type GraphProfileResponse = {
@@ -29,8 +28,24 @@ export type InstagramGraphStatus = {
   connected: boolean;
   username?: string;
   userId?: string;
+  host?: string;
   error?: string;
 };
+
+function configuredHosts(): string[] {
+  const preferred = process.env.INSTAGRAM_GRAPH_HOST?.trim().replace(/\/$/, "");
+  const defaults = [
+    "https://graph.instagram.com",
+    "https://graph.facebook.com",
+  ];
+  if (preferred && !defaults.includes(preferred)) {
+    return [preferred, ...defaults];
+  }
+  if (preferred) {
+    return [preferred, ...defaults.filter((h) => h !== preferred)];
+  }
+  return defaults;
+}
 
 export function isInstagramGraphConfigured(): boolean {
   return Boolean(process.env.INSTAGRAM_ACCESS_TOKEN?.trim());
@@ -44,29 +59,57 @@ function accessToken(): string {
   return token;
 }
 
-function mediaEndpoint(): string {
+function mediaPath(): string {
   const userId = process.env.INSTAGRAM_USER_ID?.trim();
-  return userId ? `${GRAPH}/${userId}/media` : `${GRAPH}/me/media`;
+  return userId ? `/${userId}/media` : "/me/media";
 }
 
-async function graphFetch<T>(url: URL): Promise<T> {
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 3600 },
-  });
+async function graphFetchJson<T>(url: URL): Promise<T> {
+  const res = await fetch(
+    url.toString(),
+    process.env.NODE_ENV === "development"
+      ? { cache: "no-store" }
+      : { next: { revalidate: 300, tags: ["instagram"] } },
+  );
 
-  const body = (await res.json()) as T & { error?: { message: string } };
+  const body = (await res.json()) as T & {
+    error?: { message: string };
+  };
 
   if (!res.ok || body.error) {
-    throw new Error(body.error?.message ?? `Instagram API hatası (${res.status})`);
+    throw new Error(
+      body.error?.message ?? `Instagram API hatası (${res.status})`,
+    );
   }
 
   return body;
 }
 
+/** Try Instagram Login host first, then Facebook Login host (or reverse if configured). */
+async function graphFetchAcrossHosts<T>(
+  buildPath: (host: string) => URL,
+): Promise<{ data: T; host: string }> {
+  const hosts = configuredHosts();
+  const errors: string[] = [];
+
+  for (const host of hosts) {
+    try {
+      const data = await graphFetchJson<T>(buildPath(host));
+      return { data, host };
+    } catch (error) {
+      errors.push(
+        `${host}: ${error instanceof Error ? error.message : "bilinmeyen hata"}`,
+      );
+    }
+  }
+
+  throw new Error(errors.join(" | ") || "Instagram Graph isteği başarısız.");
+}
+
 function toFeedPost(item: GraphMedia): ResolvedInstagramPost | null {
   const imageUrl =
     item.media_type === "VIDEO"
-      ? item.thumbnail_url ?? null
+      ? item.thumbnail_url ?? item.media_url ?? null
       : item.media_url ?? item.thumbnail_url ?? null;
 
   if (!imageUrl || !item.permalink) return null;
@@ -83,29 +126,38 @@ function toFeedPost(item: GraphMedia): ResolvedInstagramPost | null {
 export async function fetchInstagramGraphProfile(): Promise<{
   id: string;
   username: string;
+  host: string;
 }> {
-  const url = new URL(`${GRAPH}/me`);
-  url.searchParams.set("fields", "id,username");
-  url.searchParams.set("access_token", accessToken());
+  const { data, host } = await graphFetchAcrossHosts<GraphProfileResponse>(
+    (base) => {
+      const url = new URL(`${base}/me`);
+      url.searchParams.set("fields", "id,username");
+      url.searchParams.set("access_token", accessToken());
+      return url;
+    },
+  );
 
-  const body = await graphFetch<GraphProfileResponse>(url);
-  if (!body.id || !body.username) {
+  if (!data.id || !data.username) {
     throw new Error("Instagram profil bilgisi alınamadı.");
   }
 
-  return { id: body.id, username: body.username };
+  return { id: data.id, username: data.username, host };
 }
 
 export async function fetchInstagramGraphPosts(
   limit: number,
 ): Promise<ResolvedInstagramPost[]> {
-  const url = new URL(mediaEndpoint());
-  url.searchParams.set("fields", FIELDS);
-  url.searchParams.set("limit", String(Math.min(Math.max(limit, 1), 25)));
-  url.searchParams.set("access_token", accessToken());
+  const safeLimit = Math.min(Math.max(limit, 1), 25);
 
-  const body = await graphFetch<GraphMediaResponse>(url);
-  const posts = (body.data ?? [])
+  const { data } = await graphFetchAcrossHosts<GraphMediaResponse>((base) => {
+    const url = new URL(`${base}${mediaPath()}`);
+    url.searchParams.set("fields", FIELDS);
+    url.searchParams.set("limit", String(safeLimit));
+    url.searchParams.set("access_token", accessToken());
+    return url;
+  });
+
+  const posts = (data.data ?? [])
     .map(toFeedPost)
     .filter((post): post is ResolvedInstagramPost => post !== null);
 
@@ -117,7 +169,8 @@ export async function getInstagramGraphStatus(): Promise<InstagramGraphStatus> {
     return {
       configured: false,
       connected: false,
-      error: "INSTAGRAM_ACCESS_TOKEN Vercel ortam değişkenlerine eklenmemiş.",
+      error:
+        "INSTAGRAM_ACCESS_TOKEN Vercel ortam değişkenlerine eklenmemiş. Admin CMS ayarları yetmez; token sunucu env’de olmalı.",
     };
   }
 
@@ -128,6 +181,7 @@ export async function getInstagramGraphStatus(): Promise<InstagramGraphStatus> {
       connected: true,
       username: profile.username,
       userId: profile.id,
+      host: profile.host,
     };
   } catch (error) {
     return {
