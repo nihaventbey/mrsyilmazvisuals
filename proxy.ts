@@ -30,6 +30,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/admin/giris";
   const isMaintenancePage = pathname === "/bakim";
+  const isLegalPage = pathname === "/gizlilik-politikasi";
   const isAdminRoute = pathname.startsWith("/admin");
   const supabaseConfigured =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -45,7 +46,13 @@ export async function proxy(request: NextRequest) {
 
   const maintenanceOn = await fetchMaintenanceEnabled();
 
-  if (maintenanceOn && !isAdminRoute && !isMaintenancePage && !user) {
+  if (
+    maintenanceOn &&
+    !isAdminRoute &&
+    !isMaintenancePage &&
+    !isLegalPage &&
+    !user
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/bakim";
     return NextResponse.redirect(url);
