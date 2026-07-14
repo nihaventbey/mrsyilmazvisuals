@@ -5,6 +5,7 @@ import Image from "next/image";
 import { uploadPortfolioImages } from "@/app/admin/actions";
 import { Button } from "@/components/ui/Button";
 import { SelectField } from "@/components/ui/Field";
+import { isLikelyImageFile, MAX_IMAGE_BYTES } from "@/lib/storage-upload";
 import { cn } from "@/lib/utils";
 
 type Category = { id: string; title: string; slug: string };
@@ -55,10 +56,24 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
   const [isPending, startTransition] = useTransition();
 
   const addFiles = useCallback(async (files: FileList | File[]) => {
-    const imageFiles = Array.from(files).filter((f) =>
-      f.type.startsWith("image/"),
-    );
-    if (imageFiles.length === 0) return;
+    const candidates = Array.from(files).filter(isLikelyImageFile);
+    if (candidates.length === 0) {
+      setMessage({
+        type: "error",
+        text: "Geçerli bir görsel seçin (JPG, PNG, WEBP, HEIC).",
+      });
+      return;
+    }
+
+    const tooLarge = candidates.filter((f) => f.size > MAX_IMAGE_BYTES);
+    const imageFiles = candidates.filter((f) => f.size <= MAX_IMAGE_BYTES);
+    if (imageFiles.length === 0) {
+      setMessage({
+        type: "error",
+        text: "Dosyalar 15 MB'dan büyük olamaz.",
+      });
+      return;
+    }
 
     const entries = await Promise.all(
       imageFiles.map(async (file) => ({
@@ -74,7 +89,14 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
       const existing = new Set(prev.map((p) => p.id));
       return [...prev, ...entries.filter((e) => !existing.has(e.id))];
     });
-    setMessage(null);
+    setMessage(
+      tooLarge.length > 0
+        ? {
+            type: "error",
+            text: `${tooLarge.length} dosya 15 MB sınırını aştığı için atlandı.`,
+          }
+        : null,
+    );
   }, []);
 
   const onDrop = useCallback(

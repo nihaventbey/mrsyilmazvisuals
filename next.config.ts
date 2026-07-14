@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  experimental: {
+    serverActions: {
+      // Default is 1MB; portfolio / hero / logo uploads need room for photos.
+      bodySizeLimit: "20mb",
+    },
+    // Default proxy body is 10MB; keep aligned with server action uploads.
+    proxyClientMaxBodySize: "20mb",
+  },
   images: {
     remotePatterns: [
       {

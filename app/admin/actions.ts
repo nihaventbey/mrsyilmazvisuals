@@ -25,6 +25,11 @@ import {
   normalizePublisherId,
   type AdSenseSlotId,
 } from "@/lib/adsense-defaults";
+import {
+  extensionFromFilename,
+  normalizeStoredImagePath,
+  uploadImageFile,
+} from "@/lib/storage-upload";
 
 // ================================ auth =================================
 
@@ -143,15 +148,18 @@ export async function addPortfolioImage(
   let imagePath: string | null = null;
 
   if (file && file.size > 0) {
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = extensionFromFilename(file.name);
     imagePath = `${categoryId}/${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("portfolio")
-      .upload(imagePath, file, { contentType: file.type });
-    if (uploadError) {
+    const uploaded = await uploadImageFile(
+      supabase,
+      "portfolio",
+      imagePath,
+      file,
+    );
+    if (!uploaded.ok) {
       return {
         status: "error",
-        message: `Görsel yüklenemedi: ${uploadError.message}`,
+        message: `Görsel yüklenemedi: ${uploaded.error}`,
       };
     }
   }
@@ -213,15 +221,18 @@ export async function uploadPortfolioImages(
     const caption = String(info.caption || file.name).trim();
     const orientation =
       info.orientation === "landscape" ? "landscape" : "portrait";
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const ext = extensionFromFilename(file.name);
     const imagePath = `${categoryId}/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("portfolio")
-      .upload(imagePath, file, { contentType: file.type, upsert: false });
+    const uploadResult = await uploadImageFile(
+      supabase,
+      "portfolio",
+      imagePath,
+      file,
+    );
 
-    if (uploadError) {
-      errors.push(`${file.name}: ${uploadError.message}`);
+    if (!uploadResult.ok) {
+      errors.push(`${file.name}: ${uploadResult.error}`);
       continue;
     }
 
@@ -297,19 +308,23 @@ export async function updatePortfolioImage(
   let imagePath = currentPath || null;
 
   if (file && file.size > 0) {
-    const ext = file.name.split(".").pop() || "jpg";
-    imagePath = `${id}/${Date.now()}.${ext}`;
-    if (currentPath) {
-      await supabase.storage.from("portfolio").remove([currentPath]);
-    }
-    const { error: uploadError } = await supabase.storage
-      .from("portfolio")
-      .upload(imagePath, file, { contentType: file.type });
-    if (uploadError) {
+    const ext = extensionFromFilename(file.name);
+    const nextPath = `${id}/${Date.now()}.${ext}`;
+    const uploaded = await uploadImageFile(
+      supabase,
+      "portfolio",
+      nextPath,
+      file,
+    );
+    if (!uploaded.ok) {
       return {
         status: "error",
-        message: `Görsel yüklenemedi: ${uploadError.message}`,
+        message: `Görsel yüklenemedi: ${uploaded.error}`,
       };
+    }
+    imagePath = nextPath;
+    if (currentPath && currentPath !== nextPath) {
+      await supabase.storage.from("portfolio").remove([currentPath]);
     }
   }
 
@@ -500,30 +515,38 @@ export async function saveLogoSettings(
   const patch: Record<string, unknown> = {};
 
   if (logoFile && logoFile.size > 0) {
-    const ext = logoFile.name.split(".").pop() || "png";
+    const ext = extensionFromFilename(logoFile.name, "png");
     const logoImage = `logo/wordmark-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("site")
-      .upload(logoImage, logoFile, { contentType: logoFile.type, upsert: true });
-    if (uploadError) {
+    const uploaded = await uploadImageFile(
+      supabase,
+      "site",
+      logoImage,
+      logoFile,
+      { upsert: true },
+    );
+    if (!uploaded.ok) {
       return {
         status: "error",
-        message: `Üst menü logosu yüklenemedi: ${uploadError.message}`,
+        message: `Üst menü logosu yüklenemedi: ${uploaded.error}`,
       };
     }
     patch.logoImage = logoImage;
   }
 
   if (logoIconFile && logoIconFile.size > 0) {
-    const ext = logoIconFile.name.split(".").pop() || "png";
+    const ext = extensionFromFilename(logoIconFile.name, "png");
     const logoIcon = `logo/icon-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("site")
-      .upload(logoIcon, logoIconFile, { contentType: logoIconFile.type, upsert: true });
-    if (uploadError) {
+    const uploaded = await uploadImageFile(
+      supabase,
+      "site",
+      logoIcon,
+      logoIconFile,
+      { upsert: true },
+    );
+    if (!uploaded.ok) {
       return {
         status: "error",
-        message: `İkon logosu yüklenemedi: ${uploadError.message}`,
+        message: `İkon logosu yüklenemedi: ${uploaded.error}`,
       };
     }
     patch.logoIcon = logoIcon;
@@ -614,15 +637,19 @@ export async function saveAboutImageSettings(
     return { status: "error", message: "Yeni bir portre fotoğrafı seçin." };
   }
 
-  const ext = aboutFile.name.split(".").pop() || "jpg";
+  const ext = extensionFromFilename(aboutFile.name);
   const aboutImage = `about/${Date.now()}.${ext}`;
-  const { error: uploadError } = await supabase.storage
-    .from("site")
-    .upload(aboutImage, aboutFile, { contentType: aboutFile.type, upsert: true });
-  if (uploadError) {
+  const uploaded = await uploadImageFile(
+    supabase,
+    "site",
+    aboutImage,
+    aboutFile,
+    { upsert: true },
+  );
+  if (!uploaded.ok) {
     return {
       status: "error",
-      message: `Hakkımda görseli yüklenemedi: ${uploadError.message}`,
+      message: `Hakkımda görseli yüklenemedi: ${uploaded.error}`,
     };
   }
 
@@ -755,26 +782,26 @@ export async function saveHeroSettings(
       return { status: "error", message: "Tüm kartların başlığı dolu olmalı." };
     }
 
-    let image = String(card.image ?? "");
-    if (image.startsWith("http")) {
-      const marker = "/storage/v1/object/public/site/";
-      const idx = image.indexOf(marker);
-      image = idx >= 0 ? image.slice(idx + marker.length) : "";
-    }
+    let image = normalizeStoredImagePath(String(card.image ?? ""), "site");
 
     const file = formData.get(`image_${card.id}`) as File | null;
     if (file && file.size > 0) {
-      const ext = file.name.split(".").pop() || "jpg";
-      image = `hero/${card.id}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("site")
-        .upload(image, file, { contentType: file.type, upsert: true });
-      if (uploadError) {
+      const ext = extensionFromFilename(file.name);
+      const nextImage = `hero/${card.id}.${ext}`;
+      const uploaded = await uploadImageFile(
+        supabase,
+        "site",
+        nextImage,
+        file,
+        { upsert: true },
+      );
+      if (!uploaded.ok) {
         return {
           status: "error",
-          message: `Görsel yüklenemedi (${caption}): ${uploadError.message}`,
+          message: `Görsel yüklenemedi (${caption}): ${uploaded.error}`,
         };
       }
+      image = nextImage;
     }
 
     const palette = Array.isArray(card.palette) && card.palette.length === 3
@@ -835,26 +862,26 @@ export async function saveInstagramSettings(
         return { status: "error", message: "Tüm gönderilerin Instagram linki dolu olmalı." };
       }
 
-      let image = String(post.image ?? "");
-      if (image.startsWith("http")) {
-        const marker = "/storage/v1/object/public/site/";
-        const idx = image.indexOf(marker);
-        image = idx >= 0 ? image.slice(idx + marker.length) : "";
-      }
+      let image = normalizeStoredImagePath(String(post.image ?? ""), "site");
 
       const file = formData.get(`image_${post.id}`) as File | null;
       if (file && file.size > 0) {
-        const ext = file.name.split(".").pop() || "jpg";
-        image = `instagram/${post.id}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("site")
-          .upload(image, file, { contentType: file.type, upsert: true });
-        if (uploadError) {
+        const ext = extensionFromFilename(file.name);
+        const nextImage = `instagram/${post.id}.${ext}`;
+        const uploaded = await uploadImageFile(
+          supabase,
+          "site",
+          nextImage,
+          file,
+          { upsert: true },
+        );
+        if (!uploaded.ok) {
           return {
             status: "error",
-            message: `Görsel yüklenemedi: ${uploadError.message}`,
+            message: `Görsel yüklenemedi: ${uploaded.error}`,
           };
         }
+        image = nextImage;
       }
 
       if (!image) {
@@ -874,14 +901,18 @@ export async function saveInstagramSettings(
   }
 
   try {
-    await upsertSetting(supabase, "instagram", {
+    const patch: Record<string, unknown> = {
       enabled: formData.get("enabled") === "true",
       source,
       postLimit,
       eyebrow: String(formData.get("eyebrow") ?? "Instagram").trim(),
       title: String(formData.get("title") ?? "Son paylaşımlar").trim(),
-      posts: updatedPosts,
-    });
+    };
+    // Graph mode must not wipe manually curated fallback posts.
+    if (source === "manual") {
+      patch.posts = updatedPosts;
+    }
+    await upsertSetting(supabase, "instagram", patch);
   } catch (error) {
     return {
       status: "error",
