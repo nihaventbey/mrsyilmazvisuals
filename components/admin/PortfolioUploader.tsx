@@ -3,9 +3,14 @@
 import { useCallback, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { uploadPortfolioImages } from "@/app/admin/actions";
+import { uploadAdminImage } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
 import { SelectField } from "@/components/ui/Field";
-import { isLikelyImageFile, MAX_IMAGE_BYTES } from "@/lib/storage-upload";
+import {
+  extensionFromFilename,
+  isLikelyImageFile,
+  MAX_IMAGE_BYTES,
+} from "@/lib/storage-upload";
 import { cn } from "@/lib/utils";
 
 type Category = { id: string; title: string; slug: string };
@@ -132,32 +137,56 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
       return;
     }
 
-    const formData = new FormData();
-    formData.set("category_id", categoryId);
-    if (isFeatured) formData.set("is_featured", "on");
-    formData.set(
-      "meta",
-      JSON.stringify(
-        pending.map((p) => ({
-          caption: p.caption,
-          orientation: p.orientation,
-        })),
-      ),
-    );
-    for (const item of pending) {
-      formData.append("files", item.file);
-    }
-
     startTransition(async () => {
-      const result = await uploadPortfolioImages(formData);
-      setMessage({
-        type: result.status === "success" ? "success" : "error",
-        text: result.message ?? "İşlem tamamlandı.",
-      });
-      if (result.status === "success") {
-        pending.forEach((p) => URL.revokeObjectURL(p.preview));
-        setPending([]);
-        if (inputRef.current) inputRef.current.value = "";
+      try {
+        const items: Array<{
+          path: string;
+          caption: string;
+          orientation: string;
+        }> = [];
+
+        for (let i = 0; i < pending.length; i++) {
+          const item = pending[i];
+          const ext = extensionFromFilename(item.file.name);
+          const path = `${categoryId}/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const uploaded = await uploadAdminImage(item.file, "portfolio", path);
+          if (!uploaded.ok) {
+            setMessage({
+              type: "error",
+              text: `${item.file.name}: ${uploaded.error}`,
+            });
+            return;
+          }
+          items.push({
+            path: uploaded.path,
+            caption: item.caption,
+            orientation: item.orientation,
+          });
+        }
+
+        const formData = new FormData();
+        formData.set("category_id", categoryId);
+        if (isFeatured) formData.set("is_featured", "on");
+        formData.set("items", JSON.stringify(items));
+
+        const result = await uploadPortfolioImages(formData);
+        setMessage({
+          type: result.status === "success" ? "success" : "error",
+          text: result.message ?? "İşlem tamamlandı.",
+        });
+        if (result.status === "success") {
+          pending.forEach((p) => URL.revokeObjectURL(p.preview));
+          setPending([]);
+          if (inputRef.current) inputRef.current.value = "";
+        }
+      } catch (error) {
+        setMessage({
+          type: "error",
+          text:
+            error instanceof Error
+              ? error.message
+              : "Yükleme sırasında beklenmeyen bir hata oluştu.",
+        });
       }
     });
   }

@@ -6,9 +6,11 @@ import {
   saveInstagramSettings,
   testInstagramGraphConnection,
 } from "@/app/admin/actions";
+import { uploadAdminImage, storagePathForUpload } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
+import { storagePublicUrl } from "@/lib/supabase/public";
 import { initialFormState, type FormState } from "@/lib/validations";
 import type {
   InstagramPost,
@@ -73,26 +75,70 @@ export function InstagramFeedManager({
 
   const onSubmit = () => {
     startTransition(async () => {
-      const formData = new FormData();
-      formData.set("enabled", settings.enabled ? "true" : "false");
-      formData.set("source", settings.source);
-      formData.set("post_limit", String(settings.postLimit));
-      formData.set("eyebrow", settings.eyebrow);
-      formData.set("title", settings.title);
-      formData.set(
-        "posts_json",
-        JSON.stringify(
-          posts.map(({ id, image, url, enabled }) => ({ id, image, url, enabled })),
-        ),
-      );
+      try {
+        const nextPosts: EditablePost[] = [];
 
-      for (const [id, file] of Object.entries(files)) {
-        formData.set(`image_${id}`, file);
+        for (const post of posts) {
+          const file = files[post.id];
+          let image = post.image;
+
+          if (file) {
+            const path = storagePathForUpload("instagram", post.id, file);
+            const uploaded = await uploadAdminImage(file, "site", path, {
+              upsert: true,
+            });
+            if (!uploaded.ok) {
+              setState({
+                status: "error",
+                message: `Görsel yüklenemedi: ${uploaded.error}`,
+              });
+              return;
+            }
+            image = uploaded.path;
+          }
+
+          nextPosts.push({ ...post, image });
+        }
+
+        const formData = new FormData();
+        formData.set("enabled", settings.enabled ? "true" : "false");
+        formData.set("source", settings.source);
+        formData.set("post_limit", String(settings.postLimit));
+        formData.set("eyebrow", settings.eyebrow);
+        formData.set("title", settings.title);
+        formData.set(
+          "posts_json",
+          JSON.stringify(
+            nextPosts.map(({ id, image, url, enabled }) => ({
+              id,
+              image,
+              url,
+              enabled,
+            })),
+          ),
+        );
+
+        const result = await saveInstagramSettings(initialFormState, formData);
+        setState(result);
+        if (result.status === "success") {
+          setFiles({});
+          setPosts(
+            nextPosts.map((post) => ({
+              ...post,
+              previewUrl:
+                storagePublicUrl("site", post.image) ?? post.previewUrl,
+            })),
+          );
+        }
+      } catch (error) {
+        setState({
+          status: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Kaydetme sırasında beklenmeyen bir hata oluştu.",
+        });
       }
-
-      const result = await saveInstagramSettings(initialFormState, formData);
-      setState(result);
-      if (result.status === "success") setFiles({});
     });
   };
 

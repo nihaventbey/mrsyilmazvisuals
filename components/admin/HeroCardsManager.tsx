@@ -3,9 +3,11 @@
 import { useCallback, useState, useTransition } from "react";
 import Image from "next/image";
 import { saveHeroSettings } from "@/app/admin/actions";
+import { uploadAdminImage, storagePathForUpload } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
+import { storagePublicUrl } from "@/lib/supabase/public";
 import { initialFormState, type FormState } from "@/lib/validations";
 import type { HeroCard } from "@/lib/hero";
 import { buildDefaultHeroCards } from "@/lib/hero-defaults";
@@ -45,7 +47,13 @@ export function HeroCardsManager({
   );
 
   const removeCard = useCallback((id: string) => {
-    setCards((prev) => prev.filter((card) => card.id !== id));
+    setCards((prev) => {
+      const card = prev.find((c) => c.id === id);
+      if (card?.previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(card.previewUrl);
+      }
+      return prev.filter((c) => c.id !== id);
+    });
     setFiles((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -55,37 +63,93 @@ export function HeroCardsManager({
 
   const onFileChange = useCallback((id: string, file: File | null) => {
     if (!file) return;
-    const previewUrl = URL.createObjectURL(file);
-    setFiles((prev) => ({ ...prev, [id]: file }));
-    setCards((prev) =>
-      prev.map((card) =>
+    setCards((prev) => {
+      const previous = prev.find((c) => c.id === id)?.previewUrl;
+      if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
+      const previewUrl = URL.createObjectURL(file);
+      return prev.map((card) =>
         card.id === id ? { ...card, previewUrl } : card,
-      ),
-    );
+      );
+    });
+    setFiles((prev) => ({ ...prev, [id]: file }));
   }, []);
 
   const onSubmit = () => {
     startTransition(async () => {
-      const formData = new FormData();
-      formData.set(
-        "cards_json",
-        JSON.stringify(
-          cards.map(({ id, caption, image, palette, enabled }) => ({
-            id,
-            caption,
+      try {
+        const nextCards: EditableCard[] = [];
+
+        for (const card of cards) {
+          const file = files[card.id];
+          let image = card.image;
+
+          if (file) {
+            const path = storagePathForUpload("hero", card.id, file);
+            const uploaded = await uploadAdminImage(file, "site", path, {
+              upsert: true,
+            });
+            if (!uploaded.ok) {
+              setState({
+                status: "error",
+                message: `Görsel yüklenemedi (${card.caption}): ${uploaded.error}`,
+              });
+              return;
+            }
+            image = uploaded.path;
+          }
+
+          nextCards.push({
+            id: card.id,
+            caption: card.caption,
             image,
-            palette,
-            enabled,
-          })),
-        ),
-      );
-      for (const [id, file] of Object.entries(files)) {
-        formData.set(`image_${id}`, file);
-      }
-      const result = await saveHeroSettings(initialFormState, formData);
-      setState(result);
-      if (result.status === "success") {
-        setFiles({});
+            palette: card.palette,
+            enabled: card.enabled,
+            previewUrl: card.previewUrl,
+          });
+        }
+
+        const formData = new FormData();
+        formData.set(
+          "cards_json",
+          JSON.stringify(
+            nextCards.map(({ id, caption, image, palette, enabled }) => ({
+              id,
+              caption,
+              image,
+              palette,
+              enabled,
+            })),
+          ),
+        );
+
+        const result = await saveHeroSettings(initialFormState, formData);
+        setState(result);
+
+        if (result.status === "success") {
+          setFiles({});
+          setCards((prev) =>
+            prev.map((card) => {
+              if (card.previewUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(card.previewUrl);
+              }
+              const saved = nextCards.find((c) => c.id === card.id);
+              if (!saved) return card;
+              return {
+                ...card,
+                image: saved.image,
+                previewUrl: storagePublicUrl("site", saved.image) ?? undefined,
+              };
+            }),
+          );
+        }
+      } catch (error) {
+        setState({
+          status: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Kaydetme sırasında beklenmeyen bir hata oluştu.",
+        });
       }
     });
   };
@@ -96,6 +160,7 @@ export function HeroCardsManager({
 
       <div className="rounded-2xl border border-espresso/10 bg-white/50 p-4 text-sm text-mocha">
         Ana sayfa hero alanındaki polaroid kartları buradan yönetilir.
+        Görseller doğrudan depolamaya yüklenir (büyük dosyalar desteklenir).
         Görsel yüklemezseniz renkli placeholder kullanılır. En az 4, en fazla
         20 kart önerilir.
       </div>

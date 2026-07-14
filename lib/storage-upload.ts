@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 export type StorageBucket = "site" | "portfolio";
 
 const IMAGE_EXTENSIONS = new Set([
@@ -26,7 +24,7 @@ const CONTENT_TYPES: Record<string, string> = {
   svg: "image/svg+xml",
 };
 
-/** Soft client-side limit; Server Actions body is configured separately. */
+/** Soft client/server limit for individual images. */
 export const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
 export function extensionFromFilename(name: string, fallback = "jpg"): string {
@@ -89,40 +87,18 @@ export function normalizeStoredImagePath(
   return value.replace(/^\//, "");
 }
 
-type UploadResult =
-  | { ok: true; path: string }
-  | { ok: false; error: string };
-
-export async function uploadImageFile(
-  supabase: SupabaseClient,
-  bucket: StorageBucket,
+/** Reject path traversal and require an allowed prefix. */
+export function assertStoragePath(
   path: string,
-  file: File,
-  options?: { upsert?: boolean },
-): Promise<UploadResult> {
-  if (!(file instanceof File) || file.size <= 0) {
-    return { ok: false, error: "Geçersiz dosya." };
+  bucket: StorageBucket,
+  allowedPrefixes: string[],
+): string | null {
+  const normalized = normalizeStoredImagePath(path, bucket);
+  if (!normalized || normalized.includes("..") || normalized.includes("\\")) {
+    return null;
   }
-  if (file.size > MAX_IMAGE_BYTES) {
-    return {
-      ok: false,
-      error: `Dosya 15 MB'dan büyük olamaz (${file.name}).`,
-    };
+  if (!allowedPrefixes.some((prefix) => normalized.startsWith(prefix))) {
+    return null;
   }
-
-  const ext = extensionFromFilename(file.name);
-  const contentType = contentTypeForUpload(file, ext);
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
-    contentType,
-    upsert: options?.upsert ?? false,
-    cacheControl: "3600",
-  });
-
-  if (error) {
-    return { ok: false, error: error.message };
-  }
-
-  return { ok: true, path };
+  return normalized;
 }

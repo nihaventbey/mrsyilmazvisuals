@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import Image from "next/image";
 import { ActionForm } from "@/components/admin/ActionForm";
 import {
@@ -12,6 +12,9 @@ import {
   saveLogoSettings,
   saveMaintenanceSettings,
 } from "@/app/admin/actions";
+import { uploadAdminImage } from "@/lib/admin-upload";
+import { FormMessage } from "@/components/forms/FormMessage";
+import { Button } from "@/components/ui/Button";
 import { InputField, TextareaField } from "@/components/ui/Field";
 import type { SiteSettings } from "@/lib/settings";
 import type { MaintenanceSettings } from "@/lib/maintenance";
@@ -20,6 +23,8 @@ import {
   formatTimeline,
   formatValues,
 } from "@/lib/settings";
+import { extensionFromFilename } from "@/lib/storage-upload";
+import { initialFormState, type FormState } from "@/lib/validations";
 
 function Section({
   title,
@@ -61,77 +66,11 @@ export function SettingsForms({
         description="Site logosu ve hakkımda sayfası portre fotoğrafı ayrı yüklenir; birbirinin yerine geçmez."
       >
         <div className="grid gap-6 lg:grid-cols-2">
-          <ActionForm action={saveLogoSettings} submitLabel="Logoları Kaydet">
-            <div className="space-y-5">
-              <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
-                <p className="text-sm font-medium text-espresso">Üst menü logosu (yatay)</p>
-                <p className="text-xs text-mocha">
-                  Sol üst köşede geniş görünür. Şeffaf arka planlı PNG önerilir.
-                </p>
-                <div className="flex min-h-[88px] w-full items-center justify-start overflow-hidden rounded-lg border border-dashed border-espresso/15 bg-[linear-gradient(45deg,#eee_25%,transparent_25%,transparent_75%,#eee_75%,#eee),linear-gradient(45deg,#eee_25%,transparent_25%,transparent_75%,#eee_75%,#eee)] bg-[length:16px_16px] bg-[position:0_0,8px_8px] px-4 py-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logoPreview}
-                    alt="Üst menü logosu önizleme"
-                    className="max-h-16 w-auto max-w-full object-contain"
-                  />
-                </div>
-                <InputField
-                  label="Yatay logo yükle"
-                  name="logo_file"
-                  type="file"
-                  accept="image/*"
-                />
-              </div>
-
-              <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
-                <p className="text-sm font-medium text-espresso">İkon logosu (yuvarlak/kare)</p>
-                <p className="text-xs text-mocha">
-                  Favicon ve bakım sayfası için. Yatay logo buraya yüklenmemeli.
-                </p>
-                <div className="relative mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-gold/25 bg-cream">
-                  <Image
-                    src={logoIconPreview}
-                    alt="İkon logosu önizleme"
-                    fill
-                    sizes="96px"
-                    className="object-contain p-2"
-                  />
-                </div>
-                <InputField
-                  label="İkon logo yükle"
-                  name="logo_icon_file"
-                  type="file"
-                  accept="image/*"
-                />
-              </div>
-            </div>
-          </ActionForm>
-
-          <ActionForm action={saveAboutImageSettings} submitLabel="Hakkımda Görselini Kaydet">
-            <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
-              <p className="text-sm font-medium text-espresso">Hakkımda portre fotoğrafı</p>
-              <p className="text-xs text-mocha">
-                Ana sayfa ve /hakkimda sayfasındaki büyük dikey fotoğraf. Logo değil,
-                portre fotoğrafınızı yükleyin.
-              </p>
-              <div className="relative mx-auto aspect-[4/5] w-full max-w-xs overflow-hidden rounded-2xl border border-gold/20 bg-champagne">
-                <Image
-                  src={aboutPreview}
-                  alt="Hakkımda görseli önizleme"
-                  fill
-                  sizes="320px"
-                  className="object-cover"
-                />
-              </div>
-              <InputField
-                label="Portre fotoğrafı yükle"
-                name="about_image_file"
-                type="file"
-                accept="image/*"
-              />
-            </div>
-          </ActionForm>
+          <LogoSettingsForm
+            logoPreview={logoPreview}
+            logoIconPreview={logoIconPreview}
+          />
+          <AboutImageForm aboutPreview={aboutPreview} />
         </div>
       </Section>
 
@@ -337,5 +276,208 @@ export function SettingsForms({
         </ActionForm>
       </Section>
     </div>
+  );
+}
+
+function LogoSettingsForm({
+  logoPreview,
+  logoIconPreview,
+}: {
+  logoPreview: string;
+  logoIconPreview: string;
+}) {
+  const [state, setState] = useState<FormState>(initialFormState);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    startTransition(async () => {
+      try {
+        if (!logoFile && !iconFile) {
+          setState({
+            status: "error",
+            message: "Yeni bir logo dosyası seçin.",
+          });
+          return;
+        }
+
+        const formData = new FormData();
+        if (logoFile) {
+          const path = `logo/wordmark-${Date.now()}.${extensionFromFilename(logoFile.name, "png")}`;
+          const uploaded = await uploadAdminImage(logoFile, "site", path, {
+            upsert: true,
+          });
+          if (!uploaded.ok) {
+            setState({
+              status: "error",
+              message: `Üst menü logosu yüklenemedi: ${uploaded.error}`,
+            });
+            return;
+          }
+          formData.set("logo_image", uploaded.path);
+        }
+        if (iconFile) {
+          const path = `logo/icon-${Date.now()}.${extensionFromFilename(iconFile.name, "png")}`;
+          const uploaded = await uploadAdminImage(iconFile, "site", path, {
+            upsert: true,
+          });
+          if (!uploaded.ok) {
+            setState({
+              status: "error",
+              message: `İkon logosu yüklenemedi: ${uploaded.error}`,
+            });
+            return;
+          }
+          formData.set("logo_icon", uploaded.path);
+        }
+
+        const result = await saveLogoSettings(initialFormState, formData);
+        setState(result);
+        if (result.status === "success") {
+          setLogoFile(null);
+          setIconFile(null);
+        }
+      } catch (error) {
+        setState({
+          status: "error",
+          message:
+            error instanceof Error ? error.message : "Logo kaydedilemedi.",
+        });
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <FormMessage state={state} />
+      <div className="space-y-5">
+        <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
+          <p className="text-sm font-medium text-espresso">Üst menü logosu (yatay)</p>
+          <p className="text-xs text-mocha">
+            Sol üst köşede geniş görünür. Şeffaf arka planlı PNG önerilir.
+          </p>
+          <div className="flex min-h-[88px] w-full items-center justify-start overflow-hidden rounded-lg border border-dashed border-espresso/15 bg-[linear-gradient(45deg,#eee_25%,transparent_25%,transparent_75%,#eee_75%,#eee),linear-gradient(45deg,#eee_25%,transparent_25%,transparent_75%,#eee_75%,#eee)] bg-[length:16px_16px] bg-[position:0_0,8px_8px] px-4 py-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoPreview}
+              alt="Üst menü logosu önizleme"
+              className="max-h-16 w-auto max-w-full object-contain"
+            />
+          </div>
+          <InputField
+            label="Yatay logo yükle"
+            name="logo_file"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
+          <p className="text-sm font-medium text-espresso">İkon logosu (yuvarlak/kare)</p>
+          <p className="text-xs text-mocha">
+            Favicon ve bakım sayfası için. Yatay logo buraya yüklenmemeli.
+          </p>
+          <div className="relative mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-gold/25 bg-cream">
+            <Image
+              src={logoIconPreview}
+              alt="İkon logosu önizleme"
+              fill
+              sizes="96px"
+              className="object-contain p-2"
+            />
+          </div>
+          <InputField
+            label="İkon logo yükle"
+            name="logo_icon_file"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setIconFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
+      </div>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Kaydediliyor..." : "Logoları Kaydet"}
+      </Button>
+    </form>
+  );
+}
+
+function AboutImageForm({ aboutPreview }: { aboutPreview: string }) {
+  const [state, setState] = useState<FormState>(initialFormState);
+  const [file, setFile] = useState<File | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    startTransition(async () => {
+      try {
+        if (!file) {
+          setState({
+            status: "error",
+            message: "Yeni bir portre fotoğrafı seçin.",
+          });
+          return;
+        }
+
+        const path = `about/${Date.now()}.${extensionFromFilename(file.name)}`;
+        const uploaded = await uploadAdminImage(file, "site", path, {
+          upsert: true,
+        });
+        if (!uploaded.ok) {
+          setState({
+            status: "error",
+            message: `Hakkımda görseli yüklenemedi: ${uploaded.error}`,
+          });
+          return;
+        }
+
+        const formData = new FormData();
+        formData.set("about_image", uploaded.path);
+        const result = await saveAboutImageSettings(initialFormState, formData);
+        setState(result);
+        if (result.status === "success") setFile(null);
+      } catch (error) {
+        setState({
+          status: "error",
+          message:
+            error instanceof Error ? error.message : "Görsel kaydedilemedi.",
+        });
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <FormMessage state={state} />
+      <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
+        <p className="text-sm font-medium text-espresso">Hakkımda portre fotoğrafı</p>
+        <p className="text-xs text-mocha">
+          Ana sayfa ve /hakkimda sayfasındaki büyük dikey fotoğraf. Logo değil,
+          portre fotoğrafınızı yükleyin.
+        </p>
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-xs overflow-hidden rounded-2xl border border-gold/20 bg-champagne">
+          <Image
+            src={aboutPreview}
+            alt="Hakkımda görseli önizleme"
+            fill
+            sizes="320px"
+            className="object-cover"
+          />
+        </div>
+        <InputField
+          label="Portre fotoğrafı yükle"
+          name="about_image_file"
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+      </div>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Kaydediliyor..." : "Hakkımda Görselini Kaydet"}
+      </Button>
+    </form>
   );
 }

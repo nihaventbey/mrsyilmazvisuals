@@ -26,9 +26,8 @@ import {
   type AdSenseSlotId,
 } from "@/lib/adsense-defaults";
 import {
-  extensionFromFilename,
+  assertStoragePath,
   normalizeStoredImagePath,
-  uploadImageFile,
 } from "@/lib/storage-upload";
 
 // ================================ auth =================================
@@ -130,68 +129,20 @@ async function authedClient() {
 
 // ============================= portfolio ===============================
 
-export async function addPortfolioImage(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const supabase = await authedClient();
-  const categoryId = String(formData.get("category_id") ?? "");
-  const caption = String(formData.get("caption") ?? "");
-  const orientation = String(formData.get("orientation") ?? "portrait");
-  const isFeatured = formData.get("is_featured") === "on";
-  const file = formData.get("file") as File | null;
-
-  if (!categoryId || !caption) {
-    return { status: "error", message: "Kategori ve başlık zorunludur." };
-  }
-
-  let imagePath: string | null = null;
-
-  if (file && file.size > 0) {
-    const ext = extensionFromFilename(file.name);
-    imagePath = `${categoryId}/${Date.now()}.${ext}`;
-    const uploaded = await uploadImageFile(
-      supabase,
-      "portfolio",
-      imagePath,
-      file,
-    );
-    if (!uploaded.ok) {
-      return {
-        status: "error",
-        message: `Görsel yüklenemedi: ${uploaded.error}`,
-      };
-    }
-  }
-
-  const { error } = await supabase.from("portfolio_images").insert({
-    category_id: categoryId,
-    caption,
-    orientation,
-    is_featured: isFeatured,
-    image_path: imagePath,
-  });
-
-  if (error) {
-    return { status: "error", message: `Kaydedilemedi: ${error.message}` };
-  }
-
-  revalidateSite();
-  revalidatePath("/admin/portfolyo");
-  return { status: "success", message: "Görsel eklendi." };
-}
-
 export async function uploadPortfolioImages(
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
   const categoryId = String(formData.get("category_id") ?? "");
   const isFeatured = formData.get("is_featured") === "on";
-  const files = formData.getAll("files").filter((f) => f instanceof File && f.size > 0) as File[];
 
-  let meta: Array<{ caption: string; orientation: string }> = [];
+  let items: Array<{
+    path: string;
+    caption: string;
+    orientation: string;
+  }> = [];
   try {
-    meta = JSON.parse(String(formData.get("meta") ?? "[]"));
+    items = JSON.parse(String(formData.get("items") ?? "[]"));
   } catch {
     return { status: "error", message: "Görsel bilgileri okunamadı." };
   }
@@ -199,7 +150,7 @@ export async function uploadPortfolioImages(
   if (!categoryId) {
     return { status: "error", message: "Kategori seçin." };
   }
-  if (files.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
     return { status: "error", message: "En az bir görsel seçin." };
   }
 
@@ -212,29 +163,21 @@ export async function uploadPortfolioImages(
     .maybeSingle();
 
   let nextOrder = (lastImage?.sort_order ?? 0) + 1;
-  let uploaded = 0;
+  let saved = 0;
   const errors: string[] = [];
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const info = meta[i] ?? { caption: file.name, orientation: "portrait" };
-    const caption = String(info.caption || file.name).trim();
-    const orientation =
-      info.orientation === "landscape" ? "landscape" : "portrait";
-    const ext = extensionFromFilename(file.name);
-    const imagePath = `${categoryId}/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-    const uploadResult = await uploadImageFile(
-      supabase,
-      "portfolio",
-      imagePath,
-      file,
-    );
-
-    if (!uploadResult.ok) {
-      errors.push(`${file.name}: ${uploadResult.error}`);
+  for (const item of items) {
+    const imagePath = assertStoragePath(String(item.path ?? ""), "portfolio", [
+      `${categoryId}/`,
+    ]);
+    if (!imagePath) {
+      errors.push(`${item.caption || "görsel"}: geçersiz depolama yolu.`);
       continue;
     }
+
+    const caption = String(item.caption || "Portfolyo").trim();
+    const orientation =
+      item.orientation === "landscape" ? "landscape" : "portrait";
 
     const { error: insertError } = await supabase
       .from("portfolio_images")
@@ -248,34 +191,33 @@ export async function uploadPortfolioImages(
       });
 
     if (insertError) {
-      await supabase.storage.from("portfolio").remove([imagePath]);
-      errors.push(`${file.name}: ${insertError.message}`);
+      errors.push(`${caption}: ${insertError.message}`);
       continue;
     }
 
-    uploaded++;
+    saved++;
   }
 
   revalidateSite();
   revalidatePath("/admin/portfolyo");
 
-  if (uploaded === 0) {
+  if (saved === 0) {
     return {
       status: "error",
-      message: errors[0] ?? "Hiçbir görsel yüklenemedi.",
+      message: errors[0] ?? "Hiçbir görsel kaydedilemedi.",
     };
   }
 
   if (errors.length > 0) {
     return {
       status: "success",
-      message: `${uploaded} görsel yüklendi. ${errors.length} dosyada hata oluştu.`,
+      message: `${saved} görsel kaydedildi. ${errors.length} kayıtta hata oluştu.`,
     };
   }
 
   return {
     status: "success",
-    message: `${uploaded} görsel başarıyla yüklendi.`,
+    message: `${saved} görsel başarıyla yüklendi.`,
   };
 }
 
@@ -298,8 +240,8 @@ export async function updatePortfolioImage(
   const caption = String(formData.get("caption") ?? "");
   const orientation = String(formData.get("orientation") ?? "portrait");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const file = formData.get("file") as File | null;
   const currentPath = String(formData.get("image_path") ?? "");
+  const nextPathRaw = String(formData.get("new_image_path") ?? "").trim();
 
   if (!id || !caption) {
     return { status: "error", message: "Başlık zorunludur." };
@@ -307,20 +249,10 @@ export async function updatePortfolioImage(
 
   let imagePath = currentPath || null;
 
-  if (file && file.size > 0) {
-    const ext = extensionFromFilename(file.name);
-    const nextPath = `${id}/${Date.now()}.${ext}`;
-    const uploaded = await uploadImageFile(
-      supabase,
-      "portfolio",
-      nextPath,
-      file,
-    );
-    if (!uploaded.ok) {
-      return {
-        status: "error",
-        message: `Görsel yüklenemedi: ${uploaded.error}`,
-      };
+  if (nextPathRaw) {
+    const nextPath = assertStoragePath(nextPathRaw, "portfolio", [`${id}/`]);
+    if (!nextPath) {
+      return { status: "error", message: "Geçersiz görsel yolu." };
     }
     imagePath = nextPath;
     if (currentPath && currentPath !== nextPath) {
@@ -510,44 +442,22 @@ export async function saveLogoSettings(
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
-  const logoFile = formData.get("logo_file") as File | null;
-  const logoIconFile = formData.get("logo_icon_file") as File | null;
+  const logoImageRaw = String(formData.get("logo_image") ?? "").trim();
+  const logoIconRaw = String(formData.get("logo_icon") ?? "").trim();
   const patch: Record<string, unknown> = {};
 
-  if (logoFile && logoFile.size > 0) {
-    const ext = extensionFromFilename(logoFile.name, "png");
-    const logoImage = `logo/wordmark-${Date.now()}.${ext}`;
-    const uploaded = await uploadImageFile(
-      supabase,
-      "site",
-      logoImage,
-      logoFile,
-      { upsert: true },
-    );
-    if (!uploaded.ok) {
-      return {
-        status: "error",
-        message: `Üst menü logosu yüklenemedi: ${uploaded.error}`,
-      };
+  if (logoImageRaw) {
+    const logoImage = assertStoragePath(logoImageRaw, "site", ["logo/"]);
+    if (!logoImage) {
+      return { status: "error", message: "Geçersiz üst menü logo yolu." };
     }
     patch.logoImage = logoImage;
   }
 
-  if (logoIconFile && logoIconFile.size > 0) {
-    const ext = extensionFromFilename(logoIconFile.name, "png");
-    const logoIcon = `logo/icon-${Date.now()}.${ext}`;
-    const uploaded = await uploadImageFile(
-      supabase,
-      "site",
-      logoIcon,
-      logoIconFile,
-      { upsert: true },
-    );
-    if (!uploaded.ok) {
-      return {
-        status: "error",
-        message: `İkon logosu yüklenemedi: ${uploaded.error}`,
-      };
+  if (logoIconRaw) {
+    const logoIcon = assertStoragePath(logoIconRaw, "site", ["logo/"]);
+    if (!logoIcon) {
+      return { status: "error", message: "Geçersiz ikon logo yolu." };
     }
     patch.logoIcon = logoIcon;
   }
@@ -631,26 +541,11 @@ export async function saveAboutImageSettings(
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
-  const aboutFile = formData.get("about_image_file") as File | null;
+  const aboutImageRaw = String(formData.get("about_image") ?? "").trim();
+  const aboutImage = assertStoragePath(aboutImageRaw, "site", ["about/"]);
 
-  if (!aboutFile || aboutFile.size === 0) {
+  if (!aboutImage) {
     return { status: "error", message: "Yeni bir portre fotoğrafı seçin." };
-  }
-
-  const ext = extensionFromFilename(aboutFile.name);
-  const aboutImage = `about/${Date.now()}.${ext}`;
-  const uploaded = await uploadImageFile(
-    supabase,
-    "site",
-    aboutImage,
-    aboutFile,
-    { upsert: true },
-  );
-  if (!uploaded.ok) {
-    return {
-      status: "error",
-      message: `Hakkımda görseli yüklenemedi: ${uploaded.error}`,
-    };
   }
 
   try {
@@ -782,26 +677,12 @@ export async function saveHeroSettings(
       return { status: "error", message: "Tüm kartların başlığı dolu olmalı." };
     }
 
-    let image = normalizeStoredImagePath(String(card.image ?? ""), "site");
-
-    const file = formData.get(`image_${card.id}`) as File | null;
-    if (file && file.size > 0) {
-      const ext = extensionFromFilename(file.name);
-      const nextImage = `hero/${card.id}.${ext}`;
-      const uploaded = await uploadImageFile(
-        supabase,
-        "site",
-        nextImage,
-        file,
-        { upsert: true },
-      );
-      if (!uploaded.ok) {
-        return {
-          status: "error",
-          message: `Görsel yüklenemedi (${caption}): ${uploaded.error}`,
-        };
-      }
-      image = nextImage;
+    const image = normalizeStoredImagePath(String(card.image ?? ""), "site");
+    if (image.includes("..")) {
+      return {
+        status: "error",
+        message: `Geçersiz görsel yolu (${caption}).`,
+      };
     }
 
     const palette = Array.isArray(card.palette) && card.palette.length === 3
@@ -862,29 +743,8 @@ export async function saveInstagramSettings(
         return { status: "error", message: "Tüm gönderilerin Instagram linki dolu olmalı." };
       }
 
-      let image = normalizeStoredImagePath(String(post.image ?? ""), "site");
-
-      const file = formData.get(`image_${post.id}`) as File | null;
-      if (file && file.size > 0) {
-        const ext = extensionFromFilename(file.name);
-        const nextImage = `instagram/${post.id}.${ext}`;
-        const uploaded = await uploadImageFile(
-          supabase,
-          "site",
-          nextImage,
-          file,
-          { upsert: true },
-        );
-        if (!uploaded.ok) {
-          return {
-            status: "error",
-            message: `Görsel yüklenemedi: ${uploaded.error}`,
-          };
-        }
-        image = nextImage;
-      }
-
-      if (!image) {
+      const image = normalizeStoredImagePath(String(post.image ?? ""), "site");
+      if (!image || image.includes("..")) {
         return {
           status: "error",
           message: "Her gönderi için görsel yükleyin veya mevcut görseli koruyun.",
