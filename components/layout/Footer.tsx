@@ -107,19 +107,38 @@ export async function Footer({
       </div>
 
       <div className="border-t border-espresso/10">
-        <div className="container-page flex flex-col items-center justify-between gap-3 py-6 text-xs text-mist sm:flex-row">
-          <p>
-            © {year} {siteName}. Tüm hakları saklıdır.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <Link
-              href="/gizlilik-politikasi"
-              className="text-mocha transition-colors hover:text-espresso hover:underline hover:underline-offset-4"
-            >
-              Gizlilik Politikası
-            </Link>
-            {location ? <span>{location}</span> : null}
+        <div className="container-page flex flex-col items-center justify-between gap-4 py-6 text-xs text-mist sm:flex-row">
+          <div className="flex flex-col items-center gap-2 sm:items-start">
+            <p>
+              © {year} {siteName}. Tüm hakları saklıdır.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-start">
+              <Link
+                href="/gizlilik-politikasi"
+                className="text-mocha transition-colors hover:text-espresso hover:underline hover:underline-offset-4"
+              >
+                Gizlilik Politikası
+              </Link>
+              {location ? <span>{location}</span> : null}
+            </div>
           </div>
+
+          <a
+            href="https://www.baskabidunya.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 opacity-65 transition-all duration-300 hover:opacity-100"
+          >
+            <span className="text-[10px] font-bold uppercase tracking-wider text-mist">
+              geliştirici
+            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/baskabidunya-logo.png"
+              alt="Başka bi' Dünya"
+              className="h-5 w-auto object-contain grayscale transition-all duration-300 group-hover:grayscale-0"
+            />
+          </a>
         </div>
       </div>
     </footer>
