@@ -113,25 +113,29 @@ function seeded(i: number, salt: number): number {
 function buildTransforms(count: number): CardTransform[] {
   const golden = 2.399963;
   return Array.from({ length: count }, (_, i) => {
+    // Same depth for start and end — cards slide in XY only, so layers never cross.
+    const z = 0.15 - i * 0.12;
+
     const start = new THREE.Vector3(
       (seeded(i, 1) - 0.5) * 0.35,
       -1.25 + (seeded(i, 2) - 0.5) * 0.25,
-      i * 0.035,
+      z,
     );
-    const startRot = new THREE.Euler(0, 0, (seeded(i, 3) - 0.5) * 0.5);
+    // Face-on with in-plane twist; avoid pitch/yaw that would pierce neighbors.
+    const startRot = new THREE.Euler(0, 0, (seeded(i, 3) - 0.5) * 0.45);
 
     const f = (i + 0.7) / count;
     const angle = i * golden;
-    const radius = 1.1 + 4.6 * Math.sqrt(f);
+    const radius = 1.15 + 4.5 * Math.sqrt(f);
     const end = new THREE.Vector3(
-      Math.cos(angle) * radius * 1.35,
-      Math.sin(angle) * radius * 0.62,
-      -1.6 + seeded(i, 4) * 2.4,
+      Math.cos(angle) * radius * 1.32,
+      Math.sin(angle) * radius * 0.6,
+      z,
     );
     const endRot = new THREE.Euler(
-      (seeded(i, 5) - 0.5) * 0.35,
-      (seeded(i, 6) - 0.5) * 0.5,
-      (seeded(i, 7) - 0.5) * 0.5,
+      (seeded(i, 5) - 0.5) * 0.04,
+      (seeded(i, 6) - 0.5) * 0.04,
+      (seeded(i, 7) - 0.5) * 0.42,
     );
 
     return {
@@ -139,7 +143,7 @@ function buildTransforms(count: number): CardTransform[] {
       end,
       startRot,
       endRot,
-      stagger: (i / count) * 0.3,
+      stagger: (i / count) * 0.28,
       floatSeed: seeded(i, 8) * Math.PI * 2,
     };
   });
@@ -199,20 +203,23 @@ function PhotoCards({
       const p = smoothstep(tf.stagger, tf.stagger + 0.6, progress);
 
       child.position.lerpVectors(tf.start, tf.end, p);
+      // Float only in screen axes — never nudge Z or the layers collide again.
       const idle = 1 - p * 0.65;
+      child.position.x += Math.sin(t * 0.55 + tf.floatSeed) * 0.02 * idle;
       child.position.y +=
-        Math.sin(t * 0.7 + tf.floatSeed) * 0.05 * idle +
-        Math.sin(t * 0.4 + tf.floatSeed * 2) * 0.03 * p;
+        Math.sin(t * 0.7 + tf.floatSeed) * 0.04 * idle +
+        Math.sin(t * 0.4 + tf.floatSeed * 2) * 0.02 * p;
 
       child.rotation.set(
-        THREE.MathUtils.lerp(tf.startRot.x, tf.endRot.x, p) +
-          Math.sin(t * 0.5 + tf.floatSeed) * 0.02,
-        THREE.MathUtils.lerp(tf.startRot.y, tf.endRot.y, p) +
-          Math.cos(t * 0.45 + tf.floatSeed) * 0.03,
-        THREE.MathUtils.lerp(tf.startRot.z, tf.endRot.z, p),
+        THREE.MathUtils.lerp(tf.startRot.x, tf.endRot.x, p),
+        THREE.MathUtils.lerp(tf.startRot.y, tf.endRot.y, p),
+        THREE.MathUtils.lerp(tf.startRot.z, tf.endRot.z, p) +
+          Math.sin(t * 0.35 + tf.floatSeed) * 0.015 * idle,
       );
 
-      child.scale.setScalar(1 + p * 0.35);
+      // Milder scale so large polaroids overlap less in depth.
+      child.scale.setScalar(1 + p * 0.22);
+      child.renderOrder = i;
     });
   });
 
@@ -221,9 +228,22 @@ function PhotoCards({
   return (
     <group ref={group}>
       {transforms.map((_, i) => (
-        <mesh key={cards[i].id} castShadow={false} receiveShadow={false}>
-          <planeGeometry args={[1.5, 1.875]} />
-          <meshBasicMaterial map={textures[i]} toneMapped={false} />
+        <mesh
+          key={cards[i].id}
+          castShadow={false}
+          receiveShadow={false}
+          renderOrder={i}
+        >
+          <planeGeometry args={[1.45, 1.8125]} />
+          <meshBasicMaterial
+            map={textures[i]}
+            toneMapped={false}
+            depthWrite
+            depthTest
+            polygonOffset
+            polygonOffsetFactor={-i}
+            polygonOffsetUnits={-i}
+          />
         </mesh>
       ))}
     </group>
