@@ -230,3 +230,213 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* —— Camera / memories loader —— */
+@keyframes cameraBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+@keyframes cameraShutter {
+  0%,
+  82%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  88% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  92% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes cameraFlash {
+  0%,
+  84%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  88% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  94% {
+    opacity: 0.2;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes cameraLens {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes polaroidFloatA {
+  0%,
+  100% {
+    transform: translate(-4px, 0) rotate(-12deg);
+  }
+  50% {
+    transform: translate(-10px, -14px) rotate(-18deg);
+  }
+}
+
+@keyframes polaroidFloatB {
+  0%,
+  100% {
+    transform: translate(4px, 4px) rotate(14deg);
+  }
+  50% {
+    transform: translate(12px, -10px) rotate(20deg);
+  }
+}
+
+@keyframes polaroidFloatC {
+  0%,
+  100% {
+    transform: translate(-50%, 0) rotate(3deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(-50%, -8px) rotate(-4deg);
+    opacity: 1;
+  }
+}
+
+@keyframes cameraSparkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(12deg);
+  }
+}
+
+@keyframes cameraDot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes cameraMessagePulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.camera-body {
+  animation: cameraBob 2.8s ease-in-out infinite;
+}
+
+.camera-shutter {
+  animation: cameraShutter 2.8s ease-in-out infinite;
+}
+
+.camera-flash {
+  animation: cameraFlash 2.8s ease-in-out infinite;
+}
+
+.camera-lens-glow {
+  animation: cameraLens 2.4s ease-in-out infinite;
+}
+
+.camera-polaroid {
+  display: block;
+  width: 2.4rem;
+  height: 2.9rem;
+  padding: 0.2rem 0.2rem 0.55rem;
+  background: #fffdf8;
+  box-shadow: 0 8px 20px -12px rgba(59, 46, 38, 0.55);
+  border: 1px solid rgba(59, 46, 38, 0.08);
+}
+
+.camera-polaroid-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 1px;
+}
+
+.camera-polaroid--a {
+  animation: polaroidFloatA 3.4s ease-in-out infinite;
+}
+
+.camera-polaroid--b {
+  animation: polaroidFloatB 3.8s ease-in-out infinite 0.2s;
+}
+
+.camera-polaroid--c {
+  width: 2rem;
+  height: 2.4rem;
+  animation: polaroidFloatC 3.2s ease-in-out infinite 0.35s;
+}
+
+.camera-sparkle {
+  font-size: 0.7rem;
+  animation: cameraSparkle 2.2s ease-in-out infinite;
+}
+
+.camera-sparkle--delay {
+  animation-delay: 0.7s;
+  font-size: 0.55rem;
+}
+
+.camera-dot {
+  animation: cameraDot 1.2s ease-in-out infinite;
+}
+
+.camera-dot--2 {
+  animation-delay: 0.15s;
+}
+
+.camera-dot--3 {
+  animation-delay: 0.3s;
+}
+
+.camera-message-cycle {
+  animation: cameraMessagePulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera-body,
+  .camera-shutter,
+  .camera-flash,
+  .camera-lens-glow,
+  .camera-polaroid--a,
+  .camera-polaroid--b,
+  .camera-polaroid--c,
+  .camera-sparkle,
+  .camera-dot,
+  .camera-message-cycle {
+    animation: none;
+  }
+}

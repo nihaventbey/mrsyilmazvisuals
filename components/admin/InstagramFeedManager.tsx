@@ -8,9 +8,11 @@ import {
 } from "@/app/admin/actions";
 import { uploadAdminImage, storagePathForUpload } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { InputField } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { storagePublicUrl } from "@/lib/supabase/public";
+import { delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
 import { initialFormState, type FormState } from "@/lib/validations";
 import type {
   InstagramPost,
@@ -121,6 +123,7 @@ export function InstagramFeedManager({
         const result = await saveInstagramSettings(initialFormState, formData);
         setState(result);
         if (result.status === "success") {
+          await delay(UPLOAD_FINISH_DELAY_MS);
           setFiles({});
           setPosts(
             nextPosts.map((post) => ({
@@ -153,6 +156,12 @@ export function InstagramFeedManager({
 
   return (
     <div className="space-y-6">
+      {isPending ? (
+        <CameraMemoriesLoader
+          overlay
+          message="Instagram anıları kaydediliyor…"
+        />
+      ) : null}
       <FormMessage state={state} />
       <FormMessage state={testState} />
 

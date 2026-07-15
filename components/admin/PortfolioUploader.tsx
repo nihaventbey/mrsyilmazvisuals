@@ -5,13 +5,14 @@ import Image from "next/image";
 import { uploadPortfolioImages } from "@/app/admin/actions";
 import { uploadAdminImage } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { SelectField } from "@/components/ui/Field";
 import {
   extensionFromFilename,
   isLikelyImageFile,
   MAX_IMAGE_BYTES,
 } from "@/lib/storage-upload";
-import { cn } from "@/lib/utils";
+import { cn, delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
 
 type Category = { id: string; title: string; slug: string };
 
@@ -175,6 +176,7 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
           text: result.message ?? "İşlem tamamlandı.",
         });
         if (result.status === "success") {
+          await delay(UPLOAD_FINISH_DELAY_MS);
           pending.forEach((p) => URL.revokeObjectURL(p.preview));
           setPending([]);
           if (inputRef.current) inputRef.current.value = "";
@@ -193,6 +195,12 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
 
   return (
     <div className="rounded-2xl border border-espresso/10 bg-white/50 p-6">
+      {isPending ? (
+        <CameraMemoriesLoader
+          overlay
+          message="Portfolyo anıları yükleniyor…"
+        />
+      ) : null}
       <h2 className="font-serif text-lg text-espresso">Görsel Yükle</h2>
       <p className="mt-1 text-sm text-mocha">
         Bilgisayarınızdan veya telefonunuzdan birden fazla fotoğraf seçin.

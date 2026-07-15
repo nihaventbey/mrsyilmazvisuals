@@ -1,16 +1,26 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { saveHeroSettings } from "@/app/admin/actions";
 import { uploadAdminImage, storagePathForUpload } from "@/lib/admin-upload";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { InputField } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { storagePublicUrl } from "@/lib/supabase/public";
 import { initialFormState, type FormState } from "@/lib/validations";
 import type { HeroCard } from "@/lib/hero";
 import { buildDefaultHeroCards } from "@/lib/hero-defaults";
+import { delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
+
+const SAVE_MESSAGES = [
+  "Anılar kaydediliyor…",
+  "Poz veriliyor…",
+  "Polaroidler yerleşiyor…",
+  "Işık ayarlanıyor…",
+  "Kareler birleştiriliyor…",
+];
 
 type EditableCard = HeroCard & {
   previewUrl?: string;
@@ -36,6 +46,21 @@ export function HeroCardsManager({
   const [files, setFiles] = useState<Record<string, File>>({});
   const [state, setState] = useState<FormState>(initialFormState);
   const [isPending, startTransition] = useTransition();
+  const [loaderMessage, setLoaderMessage] = useState(SAVE_MESSAGES[0]);
+
+  useEffect(() => {
+    if (!isPending) {
+      setLoaderMessage(SAVE_MESSAGES[0]);
+      return;
+    }
+    const id = window.setInterval(() => {
+      setLoaderMessage((prev) => {
+        const idx = SAVE_MESSAGES.indexOf(prev);
+        return SAVE_MESSAGES[(idx + 1) % SAVE_MESSAGES.length];
+      });
+    }, 2200);
+    return () => window.clearInterval(id);
+  }, [isPending]);
 
   const updateCard = useCallback(
     (id: string, patch: Partial<EditableCard>) => {
@@ -78,12 +103,20 @@ export function HeroCardsManager({
     startTransition(async () => {
       try {
         const nextCards: EditableCard[] = [];
+        const uploads = Object.keys(files).length;
+        let done = 0;
 
         for (const card of cards) {
           const file = files[card.id];
           let image = card.image;
 
           if (file) {
+            done += 1;
+            setLoaderMessage(
+              uploads > 1
+                ? `Anı ${done}/${uploads} kaydediliyor…`
+                : "Anı kaydediliyor…",
+            );
             const path = storagePathForUpload("hero", card.id, file);
             const uploaded = await uploadAdminImage(file, "site", path, {
               upsert: true,
@@ -108,6 +141,8 @@ export function HeroCardsManager({
           });
         }
 
+        setLoaderMessage("Polaroidler yerine oturuyor…");
+
         const formData = new FormData();
         formData.set(
           "cards_json",
@@ -126,6 +161,8 @@ export function HeroCardsManager({
         setState(result);
 
         if (result.status === "success") {
+          setLoaderMessage("Anılar hazır!");
+          await delay(UPLOAD_FINISH_DELAY_MS);
           setFiles({});
           setCards((prev) =>
             prev.map((card) => {
@@ -156,6 +193,10 @@ export function HeroCardsManager({
 
   return (
     <div className="space-y-6">
+      {isPending ? (
+        <CameraMemoriesLoader overlay message={loaderMessage} />
+      ) : null}
+
       <FormMessage state={state} />
 
       <div className="rounded-2xl border border-espresso/10 bg-white/50 p-4 text-sm text-mocha">
@@ -254,6 +295,7 @@ export function HeroCardsManager({
                 type="button"
                 onClick={() => removeCard(card.id)}
                 className="text-sm text-red-700 transition-colors hover:text-red-900"
+                disabled={isPending}
               >
                 Sil
               </button>
@@ -267,6 +309,7 @@ export function HeroCardsManager({
           type="button"
           variant="outline"
           onClick={() => setCards((prev) => [...prev, newCard("Yeni anı")])}
+          disabled={isPending}
         >
           Kart Ekle
         </Button>

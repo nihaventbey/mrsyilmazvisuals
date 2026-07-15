@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { HeroFallback } from "@/components/home/HeroFallback";
 import type { ResolvedHeroCard } from "@/lib/hero";
 
@@ -39,11 +40,25 @@ export function Hero({
   const outroRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
-  const [webglOk, setWebglOk] = useState(false);
+  const [renderer, setRenderer] = useState<"pending" | "webgl" | "fallback">(
+    "pending",
+  );
+  const [sceneReady, setSceneReady] = useState(false);
+
+  const markReady = useCallback(() => {
+    setSceneReady(true);
+  }, []);
 
   useEffect(() => {
-    setWebglOk(supportsWebGL());
+    setRenderer(supportsWebGL() ? "webgl" : "fallback");
   }, []);
+
+  // Safety: never leave the loader stuck if WebGL/texture work stalls.
+  useEffect(() => {
+    if (sceneReady) return;
+    const timeout = window.setTimeout(() => setSceneReady(true), 12000);
+    return () => window.clearTimeout(timeout);
+  }, [sceneReady]);
 
   useEffect(() => {
     let raf = 0;
@@ -51,6 +66,13 @@ export function Hero({
     const update = () => {
       const section = sectionRef.current;
       if (!section) return;
+      // Hold the pile closed until textures are ready.
+      if (!sceneReady) {
+        progressRef.current = 0;
+        stageRef.current?.style.setProperty("--p", "0");
+        return;
+      }
+
       const rect = section.getBoundingClientRect();
       const scrollable = rect.height - window.innerHeight;
       const progress = scrollable > 0 ? clamp01(-rect.top / scrollable) : 0;
@@ -58,7 +80,6 @@ export function Hero({
 
       stageRef.current?.style.setProperty("--p", progress.toFixed(4));
 
-      // Title fades and lifts away as the photographs take over
       if (introRef.current) {
         const fade = 1 - clamp01((progress - 0.05) / 0.3);
         introRef.current.style.opacity = fade.toFixed(3);
@@ -66,7 +87,6 @@ export function Hero({
         introRef.current.style.pointerEvents = fade < 0.4 ? "none" : "auto";
       }
 
-      // Closing line + CTAs appear once the spread is nearly complete
       if (outroRef.current) {
         const appear = clamp01((progress - 0.62) / 0.28);
         outroRef.current.style.opacity = appear.toFixed(3);
@@ -92,7 +112,7 @@ export function Hero({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [sceneReady]);
 
   return (
     <section ref={sectionRef} className="relative isolate z-0 -mt-20 h-[300vh]">
@@ -100,7 +120,6 @@ export function Hero({
         ref={stageRef}
         className="sticky top-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden"
       >
-        {/* Warm backdrop */}
         <div
           aria-hidden
           className="absolute inset-0 -z-10"
@@ -110,20 +129,32 @@ export function Hero({
           }}
         />
 
-        {/* Spreading photographs: WebGL scene or CSS fallback */}
-        {webglOk ? (
-          <div className="pointer-events-none absolute inset-0 z-0">
+        {!sceneReady ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-cream/70 backdrop-blur-[2px]">
+            <CameraMemoriesLoader message="Anılar hazırlanıyor…" />
+          </div>
+        ) : null}
+
+        {renderer === "webgl" ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-700"
+            style={{ opacity: sceneReady ? 1 : 0 }}
+          >
             <Hero3D
               progressRef={progressRef}
               cards={cards}
-              onContextLost={() => setWebglOk(false)}
+              onReady={markReady}
+              onContextLost={() => {
+                setRenderer("fallback");
+              }}
             />
           </div>
-        ) : (
-          <HeroFallback cards={cards} />
-        )}
+        ) : null}
 
-        {/* Intro: title over the photo pile */}
+        {renderer === "fallback" ? (
+          <HeroFallback cards={cards} onReady={markReady} />
+        ) : null}
+
         <div
           ref={introRef}
           className="relative z-10 mx-auto max-w-3xl px-6 pb-[30vh] text-center"
@@ -139,7 +170,6 @@ export function Hero({
           </p>
         </div>
 
-        {/* Outro: revealed when the photos have spread across the page */}
         <div
           ref={outroRef}
           className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center px-6 text-center"
@@ -163,10 +193,10 @@ export function Hero({
           </div>
         </div>
 
-        {/* Scroll hint */}
         <div
           ref={hintRef}
           className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+          style={{ opacity: sceneReady ? undefined : 0 }}
         >
           <div className="flex h-10 w-6 items-start justify-center rounded-full border border-espresso/25 p-1.5">
             <span className="h-2 w-1 animate-bounce rounded-full bg-gold-dark" />

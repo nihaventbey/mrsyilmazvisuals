@@ -15,6 +15,7 @@ import {
 import { uploadAdminImage } from "@/lib/admin-upload";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { InputField, TextareaField } from "@/components/ui/Field";
 import type { SiteSettings } from "@/lib/settings";
 import type { MaintenanceSettings } from "@/lib/maintenance";
@@ -24,6 +25,7 @@ import {
   formatValues,
 } from "@/lib/settings";
 import { extensionFromFilename } from "@/lib/storage-upload";
+import { delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
 import { initialFormState, type FormState } from "@/lib/validations";
 
 function Section({
@@ -336,6 +338,7 @@ function LogoSettingsForm({
         const result = await saveLogoSettings(initialFormState, formData);
         setState(result);
         if (result.status === "success") {
+          await delay(UPLOAD_FINISH_DELAY_MS);
           setLogoFile(null);
           setIconFile(null);
         }
@@ -351,6 +354,9 @@ function LogoSettingsForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {isPending ? (
+        <CameraMemoriesLoader overlay message="Logolar kaydediliyor…" />
+      ) : null}
       <FormMessage state={state} />
       <div className="space-y-5">
         <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
@@ -438,7 +444,10 @@ function AboutImageForm({ aboutPreview }: { aboutPreview: string }) {
         formData.set("about_image", uploaded.path);
         const result = await saveAboutImageSettings(initialFormState, formData);
         setState(result);
-        if (result.status === "success") setFile(null);
+        if (result.status === "success") {
+          await delay(UPLOAD_FINISH_DELAY_MS);
+          setFile(null);
+        }
       } catch (error) {
         setState({
           status: "error",
@@ -451,6 +460,12 @@ function AboutImageForm({ aboutPreview }: { aboutPreview: string }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {isPending ? (
+        <CameraMemoriesLoader
+          overlay
+          message="Portre anısı kaydediliyor…"
+        />
+      ) : null}
       <FormMessage state={state} />
       <div className="space-y-3 rounded-xl border border-espresso/10 bg-cream/40 p-4">
         <p className="text-sm font-medium text-espresso">Hakkımda portre fotoğrafı</p>

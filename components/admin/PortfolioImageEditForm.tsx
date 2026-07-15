@@ -5,8 +5,10 @@ import { updatePortfolioImage } from "@/app/admin/actions";
 import { uploadAdminImage } from "@/lib/admin-upload";
 import { FormMessage } from "@/components/forms/FormMessage";
 import { Button } from "@/components/ui/Button";
+import { CameraMemoriesLoader } from "@/components/ui/CameraMemoriesLoader";
 import { InputField, SelectField } from "@/components/ui/Field";
 import { extensionFromFilename } from "@/lib/storage-upload";
+import { delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
 import { initialFormState, type FormState } from "@/lib/validations";
 
 type Image = {
@@ -46,7 +48,10 @@ export function PortfolioImageEditForm({ image }: { image: Image }) {
         formData.delete("file");
         const result = await updatePortfolioImage(initialFormState, formData);
         setState(result);
-        if (result.status === "success") setFile(null);
+        if (result.status === "success") {
+          await delay(UPLOAD_FINISH_DELAY_MS);
+          setFile(null);
+        }
       } catch (error) {
         setState({
           status: "error",
@@ -64,6 +69,9 @@ export function PortfolioImageEditForm({ image }: { image: Image }) {
       onSubmit={onSubmit}
       className="mt-3 space-y-3 border-t border-espresso/10 pt-3"
     >
+      {isPending ? (
+        <CameraMemoriesLoader compact message="Anı güncelleniyor…" />
+      ) : null}
       <FormMessage state={state} />
       <input type="hidden" name="id" value={image.id} />
       <input type="hidden" name="image_path" value={image.image_path ?? ""} />

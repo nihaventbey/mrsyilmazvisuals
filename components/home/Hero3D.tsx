@@ -148,23 +148,46 @@ function buildTransforms(count: number): CardTransform[] {
 function PhotoCards({
   progressRef,
   cards,
+  onReady,
 }: {
   progressRef: ProgressRef;
   cards: ResolvedHeroCard[];
+  onReady?: () => void;
 }) {
   const group = useRef<THREE.Group>(null);
   const transforms = useMemo(() => buildTransforms(cards.length), [cards.length]);
   const [textures, setTextures] = useState<THREE.CanvasTexture[]>([]);
+  const readySent = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
+    readySent.current = false;
+    setTextures([]);
+
     Promise.all(cards.map((card) => createPolaroidTexture(card))).then((next) => {
-      if (!cancelled) setTextures(next);
+      if (cancelled) {
+        next.forEach((texture) => texture.dispose());
+        return;
+      }
+      setTextures(next);
+      if (!readySent.current) {
+        readySent.current = true;
+        onReady?.();
+      }
     });
+
     return () => {
       cancelled = true;
     };
+    // cards identity from server is stable per navigation; onReady is memoized.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
+
+  useEffect(() => {
+    return () => {
+      textures.forEach((texture) => texture.dispose());
+    };
+  }, [textures]);
 
   useFrame(({ clock }) => {
     if (!group.current || textures.length !== cards.length) return;
@@ -226,10 +249,12 @@ function CameraRig({ progressRef }: { progressRef: ProgressRef }) {
 export default function Hero3D({
   progressRef,
   cards,
+  onReady,
   onContextLost,
 }: {
   progressRef: ProgressRef;
   cards: ResolvedHeroCard[];
+  onReady?: () => void;
   onContextLost?: () => void;
 }) {
   return (
@@ -247,7 +272,7 @@ export default function Hero3D({
       }}
     >
       <ambientLight intensity={1} color="#fff6e6" />
-      <PhotoCards progressRef={progressRef} cards={cards} />
+      <PhotoCards progressRef={progressRef} cards={cards} onReady={onReady} />
       <Sparkles
         count={60}
         scale={[15, 9, 6]}

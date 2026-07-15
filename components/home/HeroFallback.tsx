@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
 import type { ResolvedHeroCard } from "@/lib/hero";
 
 function seeded(i: number, salt: number): number {
@@ -6,9 +8,47 @@ function seeded(i: number, salt: number): number {
   return x - Math.floor(x);
 }
 
-export function HeroFallback({ cards }: { cards: ResolvedHeroCard[] }) {
+function loadImage(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = src;
+  });
+}
+
+export function HeroFallback({
+  cards,
+  onReady,
+}: {
+  cards: ResolvedHeroCard[];
+  onReady?: () => void;
+}) {
   const golden = 2.399963;
   const count = cards.length;
+  const [imagesReady, setImagesReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const urls = cards.map((card) => card.imageUrl).filter(Boolean) as string[];
+
+    if (urls.length === 0) {
+      setImagesReady(true);
+      onReady?.();
+      return;
+    }
+
+    Promise.all(urls.map((url) => loadImage(url))).then(() => {
+      if (cancelled) return;
+      setImagesReady(true);
+      onReady?.();
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
 
   const layout = Array.from({ length: count }, (_, i) => {
     const f = (i + 0.7) / count;
@@ -25,7 +65,11 @@ export function HeroFallback({ cards }: { cards: ResolvedHeroCard[] }) {
   });
 
   return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden">
+    <div
+      aria-hidden
+      className="absolute inset-0 overflow-hidden transition-opacity duration-700"
+      style={{ opacity: imagesReady ? 1 : 0 }}
+    >
       {cards.map((card, i) => {
         const [light, mid, dark] = card.palette;
         const pos = layout[i];
@@ -49,12 +93,13 @@ export function HeroFallback({ cards }: { cards: ResolvedHeroCard[] }) {
             <div className="rounded-[4px] bg-[#fdfaf4] p-2 pb-7 shadow-[0_18px_45px_-18px_rgba(59,46,38,0.45)]">
               <div className="relative aspect-[4/5] w-full overflow-hidden">
                 {card.imageUrl ? (
-                  <Image
+                  // Plain img avoids next/image optimizer 500s on large storage files.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={card.imageUrl}
-                    alt={card.caption}
-                    fill
-                    sizes="176px"
-                    className="object-cover"
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    decoding="async"
                   />
                 ) : (
                   <div
