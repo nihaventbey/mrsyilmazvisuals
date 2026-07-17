@@ -16,15 +16,12 @@ import {
 } from "@/lib/blog-ai";
 import { assertStoragePath } from "@/lib/storage-upload";
 
-/** Vercel / Next.js route segment timeout for image generation. */
-export const maxDuration = 60;
-
-export type BlogAiExpandResult = FormState & {
+type BlogAiExpandResult = FormState & {
   content?: string;
   excerpt?: string;
 };
 
-export type BlogAiImagesResult = FormState & {
+type BlogAiImagesResult = FormState & {
   content?: string;
   generatedCount?: number;
   remainingMarkers?: number;
