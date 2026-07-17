@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BlogPostForm } from "@/components/admin/BlogPostForm";
+import { isGeminiConfigured } from "@/lib/gemini";
+
+export const maxDuration = 60;
 
 export default async function EditBlogPostPage({
   params,
@@ -21,7 +24,10 @@ export default async function EditBlogPostPage({
     <div className="max-w-3xl">
       <h1 className="font-serif text-3xl text-espresso">Yazıyı Düzenle</h1>
       <div className="mt-8">
-        <BlogPostForm post={post} />
+        <BlogPostForm
+          post={post}
+          geminiConfigured={isGeminiConfigured()}
+        />
       </div>
     </div>
   );
