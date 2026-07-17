@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ResolvedHeroCard } from "@/lib/hero";
 
 function seeded(i: number, salt: number): number {
@@ -17,6 +17,17 @@ function loadImage(src: string): Promise<void> {
   });
 }
 
+function useViewportWidth() {
+  const [width, setWidth] = useState(1024);
+  useEffect(() => {
+    const update = () => setWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return width;
+}
+
 export function HeroFallback({
   cards,
   onReady,
@@ -26,7 +37,11 @@ export function HeroFallback({
 }) {
   const golden = 2.399963;
   const count = cards.length;
+  const width = useViewportWidth();
   const [imagesReady, setImagesReady] = useState(false);
+
+  const spread =
+    width < 480 ? 0.42 : width < 768 ? 0.55 : width < 1024 ? 0.75 : 1;
 
   useEffect(() => {
     let cancelled = false;
@@ -50,19 +65,23 @@ export function HeroFallback({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
 
-  const layout = Array.from({ length: count }, (_, i) => {
-    const f = (i + 0.7) / count;
-    const angle = i * golden;
-    const radius = 12 + 34 * Math.sqrt(f);
-    return {
-      tx: `${(Math.cos(angle) * radius * 1.15).toFixed(1)}vw`,
-      ty: `${(Math.sin(angle) * radius * 0.62).toFixed(1)}vh`,
-      r0: `${((seeded(i, 3) - 0.5) * 26).toFixed(1)}deg`,
-      dr: `${((seeded(i, 7) - 0.5) * 24).toFixed(1)}deg`,
-      z: i,
-      startShift: `${((seeded(i, 1) - 0.5) * 2.2).toFixed(1)}rem`,
-    };
-  });
+  const layout = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const f = (i + 0.7) / count;
+        const angle = i * golden;
+        const radius = (10 + 28 * Math.sqrt(f)) * spread;
+        return {
+          tx: `${(Math.cos(angle) * radius * 1.05).toFixed(1)}vw`,
+          ty: `${(Math.sin(angle) * radius * 0.55).toFixed(1)}vh`,
+          r0: `${((seeded(i, 3) - 0.5) * 26).toFixed(1)}deg`,
+          dr: `${((seeded(i, 7) - 0.5) * 24).toFixed(1)}deg`,
+          z: i,
+          startShift: `${((seeded(i, 1) - 0.5) * 1.6).toFixed(1)}rem`,
+        };
+      }),
+    [count, spread],
+  );
 
   return (
     <div
@@ -76,24 +95,23 @@ export function HeroFallback({
         return (
           <div
             key={card.id}
-            className="absolute left-1/2 top-1/2 w-36 sm:w-44"
+            className="absolute left-1/2 top-1/2 w-28 sm:w-36 md:w-44"
             style={{
               zIndex: pos.z,
               transform: [
                 "translate(-50%, -52%)",
-                "translateY(calc((1 - var(--p, 0)) * 19vh))",
+                "translateY(calc((1 - var(--p, 0)) * 16vh))",
                 `translateX(${pos.startShift})`,
                 `translate(calc(var(--p, 0) * ${pos.tx}), calc(var(--p, 0) * ${pos.ty}))`,
                 `rotate(calc(${pos.r0} + var(--p, 0) * ${pos.dr}))`,
-                "scale(calc(1 + var(--p, 0) * 0.3))",
+                "scale(calc(1 + var(--p, 0) * 0.18))",
               ].join(" "),
               transition: "transform 0.15s linear",
             }}
           >
-            <div className="rounded-[4px] bg-[#fdfaf4] p-2 pb-7 shadow-[0_18px_45px_-18px_rgba(59,46,38,0.45)]">
+            <div className="rounded-[4px] bg-[#fdfaf4] p-1.5 pb-5 shadow-[0_18px_45px_-18px_rgba(59,46,38,0.45)] sm:p-2 sm:pb-7">
               <div className="relative aspect-[4/5] w-full overflow-hidden">
                 {card.imageUrl ? (
-                  // Plain img avoids next/image optimizer 500s on large storage files.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={card.imageUrl}
@@ -110,7 +128,7 @@ export function HeroFallback({
                   />
                 )}
               </div>
-              <p className="mt-1.5 text-center font-serif text-[11px] italic text-[#5a4636] sm:text-xs">
+              <p className="mt-1 text-center font-serif text-[10px] italic text-[#5a4636] sm:mt-1.5 sm:text-xs">
                 {card.caption}
               </p>
             </div>

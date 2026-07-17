@@ -53,7 +53,6 @@ export function Hero({
     setRenderer(supportsWebGL() ? "webgl" : "fallback");
   }, []);
 
-  // Safety: never leave the loader stuck if WebGL/texture work stalls.
   useEffect(() => {
     if (sceneReady) return;
     const timeout = window.setTimeout(() => setSceneReady(true), 12000);
@@ -66,7 +65,6 @@ export function Hero({
     const update = () => {
       const section = sectionRef.current;
       if (!section) return;
-      // Hold the pile closed until textures are ready.
       if (!sceneReady) {
         progressRef.current = 0;
         stageRef.current?.style.setProperty("--p", "0");
@@ -115,10 +113,10 @@ export function Hero({
   }, [sceneReady]);
 
   return (
-    <section ref={sectionRef} className="relative isolate z-0 -mt-20 h-[300vh]">
+    <section ref={sectionRef} className="relative isolate z-0 -mt-20 h-[280vh] sm:h-[300vh]">
       <div
         ref={stageRef}
-        className="sticky top-0 z-0 flex h-screen w-full items-center justify-center overflow-hidden"
+        className="sticky top-0 z-0 flex h-[100dvh] w-full max-w-[100vw] items-center justify-center overflow-hidden"
       >
         <div
           aria-hidden
@@ -157,36 +155,41 @@ export function Hero({
 
         <div
           ref={introRef}
-          className="relative z-10 mx-auto max-w-3xl px-6 pb-[30vh] text-center"
+          className="relative z-10 mx-auto w-full max-w-3xl px-4 pb-[22vh] text-center sm:px-6 sm:pb-[30vh]"
         >
-          <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-gold-dark">
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-gold-dark sm:mb-5 sm:text-xs sm:tracking-[0.35em]">
             Bebek · Doğum · Hamile · Düğün
           </p>
-          <h1 className="text-5xl leading-[1.05] text-espresso drop-shadow-[0_2px_18px_rgba(251,247,240,0.9)] sm:text-6xl lg:text-7xl">
+          <h1 className="break-words text-[1.85rem] leading-[1.12] text-espresso drop-shadow-[0_2px_18px_rgba(251,247,240,0.9)] min-[400px]:text-4xl sm:text-6xl lg:text-7xl">
             {tagline}
           </h1>
-          <p className="mx-auto mt-6 max-w-md text-lg leading-relaxed text-mocha">
+          <p className="mx-auto mt-4 max-w-[18rem] text-base leading-relaxed text-mocha sm:mt-6 sm:max-w-md sm:text-lg">
             Kaydırın; anılar sayfaya yayılsın.
           </p>
         </div>
 
         <div
           ref={outroRef}
-          className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center px-6 text-center"
+          className="absolute inset-x-0 bottom-0 top-0 z-10 flex flex-col items-center justify-center px-4 text-center sm:px-6"
           style={{ opacity: 0, pointerEvents: "none" }}
         >
-          <div className="rounded-3xl bg-cream/80 px-8 py-10 backdrop-blur-sm sm:px-14">
-            <h2 className="font-serif text-3xl text-espresso sm:text-4xl">
+          <div className="w-full max-w-[min(100%,24rem)] rounded-2xl bg-cream/85 px-4 py-6 backdrop-blur-sm sm:max-w-lg sm:rounded-3xl sm:px-14 sm:py-10">
+            <h2 className="break-words font-serif text-2xl leading-snug text-espresso sm:text-4xl">
               Her kare bir hikâye anlatır
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-mocha">
+            <p className="mx-auto mt-3 max-w-md break-words text-sm leading-relaxed text-mocha sm:mt-4 sm:text-base">
               {description}
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Button href="/portfolyo" size="lg">
+            <div className="mt-5 flex flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+              <Button href="/portfolyo" size="md" className="w-full sm:w-auto sm:px-8 sm:py-4 sm:text-base">
                 Portfolyoyu Keşfet
               </Button>
-              <Button href="/rezervasyon" size="lg" variant="outline">
+              <Button
+                href="/rezervasyon"
+                size="md"
+                variant="outline"
+                className="w-full sm:w-auto sm:px-8 sm:py-4 sm:text-base"
+              >
                 Rezervasyon Oluştur
               </Button>
             </div>
@@ -195,7 +198,7 @@ export function Hero({
 
         <div
           ref={hintRef}
-          className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 sm:bottom-8"
           style={{ opacity: sceneReady ? undefined : 0 }}
         >
           <div className="flex h-10 w-6 items-start justify-center rounded-full border border-espresso/25 p-1.5">

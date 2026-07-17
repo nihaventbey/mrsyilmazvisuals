@@ -110,14 +110,29 @@ function seeded(i: number, salt: number): number {
   return x - Math.floor(x);
 }
 
-function buildTransforms(count: number): CardTransform[] {
+/** Narrow viewports need a tighter scatter so cards stay on screen. */
+function spreadScaleForWidth(width: number): number {
+  if (width < 480) return 0.48;
+  if (width < 768) return 0.62;
+  if (width < 1024) return 0.82;
+  return 1;
+}
+
+function cardScaleForWidth(width: number): number {
+  if (width < 480) return 0.72;
+  if (width < 768) return 0.82;
+  return 1;
+}
+
+function buildTransforms(count: number, width: number): CardTransform[] {
   const golden = 2.399963;
+  const spread = spreadScaleForWidth(width);
   return Array.from({ length: count }, (_, i) => {
     // Same depth for start and end — cards slide in XY only, so layers never cross.
     const z = 0.15 - i * 0.12;
 
     const start = new THREE.Vector3(
-      (seeded(i, 1) - 0.5) * 0.35,
+      (seeded(i, 1) - 0.5) * 0.35 * spread,
       -1.25 + (seeded(i, 2) - 0.5) * 0.25,
       z,
     );
@@ -126,7 +141,7 @@ function buildTransforms(count: number): CardTransform[] {
 
     const f = (i + 0.7) / count;
     const angle = i * golden;
-    const radius = 1.15 + 4.5 * Math.sqrt(f);
+    const radius = (1.15 + 4.5 * Math.sqrt(f)) * spread;
     const end = new THREE.Vector3(
       Math.cos(angle) * radius * 1.32,
       Math.sin(angle) * radius * 0.6,
@@ -159,7 +174,12 @@ function PhotoCards({
   onReady?: () => void;
 }) {
   const group = useRef<THREE.Group>(null);
-  const transforms = useMemo(() => buildTransforms(cards.length), [cards.length]);
+  const { size } = useThree();
+  const transforms = useMemo(
+    () => buildTransforms(cards.length, size.width),
+    [cards.length, size.width],
+  );
+  const meshScale = useMemo(() => cardScaleForWidth(size.width), [size.width]);
   const [textures, setTextures] = useState<THREE.CanvasTexture[]>([]);
   const readySent = useRef(false);
 
@@ -218,7 +238,7 @@ function PhotoCards({
       );
 
       // Milder scale so large polaroids overlap less in depth.
-      child.scale.setScalar(1 + p * 0.22);
+      child.scale.setScalar(meshScale * (1 + p * 0.18));
       child.renderOrder = i;
     });
   });
@@ -251,15 +271,18 @@ function PhotoCards({
 }
 
 function CameraRig({ progressRef }: { progressRef: ProgressRef }) {
-  const { camera, pointer } = useThree();
+  const { camera, pointer, size } = useThree();
+  const baseZ = size.width < 768 ? 7.6 : 6.4;
+  const zoomOut = size.width < 768 ? 1.4 : 2.2;
+  const pan = size.width < 768 ? 0.18 : 0.5;
 
   useFrame(() => {
     const progress = progressRef.current ?? 0;
-    const targetZ = 6.4 + progress * 2.2;
+    const targetZ = baseZ + progress * zoomOut;
     camera.position.z += (targetZ - camera.position.z) * 0.05;
-    camera.position.x += (pointer.x * 0.5 - camera.position.x) * 0.04;
+    camera.position.x += (pointer.x * pan - camera.position.x) * 0.04;
     camera.position.y +=
-      (pointer.y * 0.3 + progress * 0.2 - camera.position.y) * 0.04;
+      (pointer.y * pan * 0.6 + progress * 0.15 - camera.position.y) * 0.04;
     camera.lookAt(0, 0, 0);
   });
 
