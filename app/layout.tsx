@@ -4,6 +4,7 @@ import "./globals.css";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FloatingActions } from "@/components/layout/FloatingActions";
 import { absoluteUrl } from "@/lib/seo";
+import { buildMetadataKeywords, getSeoSettings } from "@/lib/seo-keywords";
 import { getSiteConfig } from "@/lib/settings";
 
 const playfair = Playfair_Display({
@@ -19,7 +20,7 @@ const inter = Inter({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const config = await getSiteConfig();
+  const [config, seo] = await Promise.all([getSiteConfig(), getSeoSettings()]);
   const ogImage = absoluteUrl(config.aboutImage, config.url);
 
   return {
@@ -29,24 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${config.name}`,
     },
     description: config.description,
-    keywords: [
-      config.author,
-      config.name,
-      "doğum fotoğrafçısı",
-      "bebek fotoğrafçısı",
-      "çocuk fotoğrafçısı",
-      "hamile çekimi",
-      "yenidoğan çekimi",
-      "düğün fotoğrafçısı",
-      "Ankara Gölbaşı fotoğraf çekimi",
-      "Gölbaşı bebek fotoğrafçısı",
-      "Gölbaşı düğün fotoğrafçısı",
-      "Ankara doğum fotoğrafçısı",
-      "İstanbul doğum fotoğrafçısı",
-      "İstanbul bebek fotoğrafçısı",
-      "Üsküdar fotoğrafçı",
-      "Mrs Yılmaz Visuals",
-    ],
+    keywords: buildMetadataKeywords(seo, [config.author, config.name]),
     authors: [{ name: config.author, url: `${config.url}/hakkimda` }],
     creator: config.author,
     publisher: config.name,

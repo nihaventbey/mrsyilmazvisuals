@@ -3,16 +3,18 @@ import {
   buildPersonJsonLd,
   buildWebsiteJsonLd,
 } from "@/lib/seo";
+import { getSeoSettings } from "@/lib/seo-keywords";
 import { getSiteConfig, getSocialLinks } from "@/lib/settings";
 
 export async function JsonLd() {
-  const [config, socialLinks] = await Promise.all([
+  const [config, socialLinks, seo] = await Promise.all([
     getSiteConfig(),
     getSocialLinks(),
+    getSeoSettings(),
   ]);
 
   const payload = [
-    buildOrganizationJsonLd(config, socialLinks),
+    buildOrganizationJsonLd(config, socialLinks, seo.keywords),
     buildPersonJsonLd(config, socialLinks),
     buildWebsiteJsonLd(config),
   ];

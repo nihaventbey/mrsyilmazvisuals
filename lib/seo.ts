@@ -43,6 +43,7 @@ export function absoluteUrl(path: string, baseUrl: string): string {
 export function buildOrganizationJsonLd(
   config: SiteConfig,
   socialLinks: SocialLink[],
+  knowsAbout: string[] = [],
 ) {
   const sameAs = socialLinks.map((link) => link.href).filter(Boolean);
   if (config.whatsappUrl) {
@@ -88,15 +89,18 @@ export function buildOrganizationJsonLd(
       "@type": "Person",
       name: config.author,
     },
-    knowsAbout: [
-      "Doğum fotoğrafçılığı",
-      "Hamile çekimi",
-      "Yenidoğan fotoğrafçılığı",
-      "Bebek fotoğrafçılığı",
-      "Çocuk fotoğrafçılığı",
-      "Düğün fotoğrafçılığı",
-      "Ankara Gölbaşı fotoğraf çekimi",
-    ],
+    knowsAbout:
+      knowsAbout.length > 0
+        ? knowsAbout
+        : [
+            "Doğum fotoğrafçılığı",
+            "Hamile çekimi",
+            "Yenidoğan fotoğrafçılığı",
+            "Bebek fotoğrafçılığı",
+            "Çocuk fotoğrafçılığı",
+            "Düğün fotoğrafçılığı",
+            "Ankara Gölbaşı fotoğraf çekimi",
+          ],
     sameAs,
   };
 }

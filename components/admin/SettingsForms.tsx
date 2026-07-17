@@ -11,6 +11,7 @@ import {
   saveHomeSettings,
   saveLogoSettings,
   saveMaintenanceSettings,
+  saveSeoSettings,
 } from "@/app/admin/actions";
 import { uploadAdminImage } from "@/lib/admin-upload";
 import { FormMessage } from "@/components/forms/FormMessage";
@@ -24,6 +25,7 @@ import {
   formatTimeline,
   formatValues,
 } from "@/lib/settings";
+import { formatKeywords, type SeoSettings } from "@/lib/seo-keywords";
 import { extensionFromFilename } from "@/lib/storage-upload";
 import { delay, UPLOAD_FINISH_DELAY_MS } from "@/lib/utils";
 import { initialFormState, type FormState } from "@/lib/validations";
@@ -49,12 +51,14 @@ function Section({
 export function SettingsForms({
   settings,
   maintenance,
+  seo,
   logoPreview,
   logoIconPreview,
   aboutPreview,
 }: {
   settings: SiteSettings;
   maintenance: MaintenanceSettings;
+  seo: SeoSettings;
   logoPreview: string;
   logoIconPreview: string;
   aboutPreview: string;
@@ -275,6 +279,39 @@ export function SettingsForms({
             defaultValue={home.ctaDescription}
             className="min-h-20"
           />
+        </ActionForm>
+      </Section>
+
+      <Section
+        title="SEO Anahtar Kelimeler"
+        description="Google aramalarında hedeflediğiniz ifadeler. Ana sayfada görünür, meta ve şema verisinde kullanılır. Her satıra bir kelime yazın."
+      >
+        <ActionForm action={saveSeoSettings} submitLabel="SEO Ayarlarını Kaydet">
+          <InputField
+            label="Bölüm üst başlık"
+            name="section_eyebrow"
+            defaultValue={seo.sectionEyebrow}
+          />
+          <InputField
+            label="Bölüm başlığı"
+            name="section_title"
+            defaultValue={seo.sectionTitle}
+          />
+          <TextareaField
+            label="Bölüm açıklaması"
+            name="section_description"
+            defaultValue={seo.sectionDescription}
+            className="min-h-20"
+          />
+          <TextareaField
+            label="Anahtar kelimeler"
+            name="keywords"
+            defaultValue={formatKeywords(seo.keywords)}
+            className="min-h-48 font-mono text-xs"
+          />
+          <p className="text-xs text-mist">
+            Örnek: Konseptli Bebek Çekimi — her satır ayrı bir hedef ifade.
+          </p>
         </ActionForm>
       </Section>
     </div>

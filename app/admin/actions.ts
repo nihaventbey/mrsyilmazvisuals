@@ -625,6 +625,43 @@ export async function saveHomeSettings(
   return { status: "success", message: "Ana sayfa ayarları kaydedildi." };
 }
 
+export async function saveSeoSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+
+  const keywords = String(formData.get("keywords") ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (keywords.length === 0) {
+    return {
+      status: "error",
+      message: "En az bir anahtar kelime girin (her satıra bir kelime).",
+    };
+  }
+
+  try {
+    await upsertSetting(supabase, "seo", {
+      keywords,
+      sectionEyebrow: String(formData.get("section_eyebrow") ?? "").trim(),
+      sectionTitle: String(formData.get("section_title") ?? "").trim(),
+      sectionDescription: String(formData.get("section_description") ?? "").trim(),
+    });
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Kaydedilemedi.",
+    };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/ayarlar");
+  return { status: "success", message: "SEO anahtar kelimeleri kaydedildi." };
+}
+
 export async function saveMaintenanceSettings(
   _prev: FormState,
   formData: FormData,

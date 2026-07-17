@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/Hero";
 import { ServicesGrid } from "@/components/home/ServicesGrid";
+import { KeywordServices } from "@/components/home/KeywordServices";
 import { FeaturedGallery } from "@/components/home/FeaturedGallery";
 import { AboutPreview } from "@/components/home/AboutPreview";
 import { BlogPreview } from "@/components/home/BlogPreview";
@@ -23,6 +24,7 @@ export default async function HomePage() {
         cards={heroCards}
       />
       <ServicesGrid />
+      <KeywordServices />
       <FeaturedGallery />
       <AboutPreview />
       <BlogPreview />
