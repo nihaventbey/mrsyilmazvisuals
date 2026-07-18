@@ -6,6 +6,7 @@ import { submitContact } from "@/app/actions";
 import { initialFormState } from "@/lib/validations";
 import { InputField, TextareaField } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
+import { AntiSpamFields } from "@/components/forms/AntiSpamFields";
 import { Button } from "@/components/ui/Button";
 
 function SubmitButton() {
@@ -54,6 +55,7 @@ export function ContactForm() {
         placeholder="Nasıl yardımcı olabilirim?"
         errors={state.errors?.message}
       />
+      <AntiSpamFields />
       <SubmitButton />
     </form>
   );

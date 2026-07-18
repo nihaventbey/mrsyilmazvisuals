@@ -1,5 +1,6 @@
 "use server";
 
+import { verifyAntiSpam } from "@/lib/anti-spam";
 import { sendNotificationEmail } from "@/lib/email";
 import { isMaintenanceActive } from "@/lib/maintenance";
 import {
@@ -29,6 +30,11 @@ export async function submitContact(
       message:
         "Site şu anda bakım modunda. Lütfen daha sonra tekrar deneyin veya Instagram üzerinden bize ulaşın.",
     };
+  }
+
+  const spamError = await verifyAntiSpam(formData);
+  if (spamError) {
+    return { status: "error", message: spamError };
   }
 
   const parsed = contactSchema.safeParse({
@@ -98,6 +104,11 @@ export async function submitBooking(
       message:
         "Site şu anda bakım modunda. Lütfen daha sonra tekrar deneyin veya Instagram üzerinden bize ulaşın.",
     };
+  }
+
+  const spamError = await verifyAntiSpam(formData);
+  if (spamError) {
+    return { status: "error", message: spamError };
   }
 
   const parsed = bookingSchema.safeParse({

@@ -47,7 +47,13 @@ export default async function AdminMessagesPage() {
             <p className="mt-3 whitespace-pre-wrap text-sm text-mocha">
               {message.message}
             </p>
-            <div className="mt-4 flex gap-4 text-sm">
+            <div className="mt-4 flex flex-wrap gap-4 text-sm">
+              <a
+                href={`mailto:${message.email}?subject=${encodeURIComponent("Re: Mrs. Yılmaz Visuals — mesajınız hakkında")}`}
+                className="text-espresso hover:underline"
+              >
+                Yanıtla
+              </a>
               <form action={toggleMessageRead}>
                 <input type="hidden" name="id" value={message.id} />
                 <input

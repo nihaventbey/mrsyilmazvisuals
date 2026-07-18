@@ -10,6 +10,7 @@ import {
   TextareaField,
 } from "@/components/ui/Field";
 import { FormMessage } from "@/components/forms/FormMessage";
+import { AntiSpamFields } from "@/components/forms/AntiSpamFields";
 import { Button } from "@/components/ui/Button";
 import type { Service } from "@/lib/settings";
 
@@ -96,6 +97,7 @@ export function BookingForm({
         placeholder="Konsept fikirleriniz, özel istekleriniz veya sorularınız"
         errors={state.errors?.notes}
       />
+      <AntiSpamFields />
       <SubmitButton />
     </form>
   );
