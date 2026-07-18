@@ -174,10 +174,10 @@ export function Hero({
           style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="w-full max-w-[min(100%,24rem)] rounded-2xl bg-cream/85 px-4 py-6 backdrop-blur-sm sm:max-w-lg sm:rounded-3xl sm:px-14 sm:py-10">
-            <h2 className="break-words font-serif text-2xl leading-snug text-espresso sm:text-4xl">
+            <h2 className="break-words font-serif text-xl leading-snug text-espresso sm:text-3xl">
               Her kare bir hikâye anlatır
             </h2>
-            <p className="mx-auto mt-3 max-w-md break-words text-sm leading-relaxed text-mocha sm:mt-4 sm:text-base">
+            <p className="mx-auto mt-3 max-w-md break-words text-[13px] leading-relaxed text-mocha sm:mt-4 sm:text-base">
               {description}
             </p>
             <div className="mt-5 flex flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
