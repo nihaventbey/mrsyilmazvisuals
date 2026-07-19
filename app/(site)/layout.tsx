@@ -6,6 +6,7 @@ import {
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
+import { MaintenanceAdminBanner } from "@/components/maintenance/MaintenanceAdminBanner";
 
 export default async function SiteLayout({
   children,
@@ -30,6 +31,7 @@ export default async function SiteLayout({
         contactChannels={contactChannels}
         socialLinks={socialLinks}
       />
+      <MaintenanceAdminBanner />
     </>
   );
 }
