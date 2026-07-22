@@ -47,7 +47,7 @@ export function FloatingActions({ whatsappUrl }: FloatingActionsProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="WhatsApp ile yazın"
-          className="pointer-events-auto group flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-[0_12px_30px_-10px_rgba(37,211,102,0.7)] transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/60"
+          className="pointer-events-auto group flex items-center gap-0 rounded-full bg-[#25D366] text-white shadow-[0_12px_30px_-10px_rgba(37,211,102,0.7)] transition-[filter,transform] duration-300 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/60"
         >
           <span className="flex h-12 w-12 items-center justify-center sm:h-14 sm:w-14">
             <WhatsAppIcon className="h-6 w-6 sm:h-7 sm:w-7" />

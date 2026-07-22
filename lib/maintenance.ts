@@ -12,9 +12,9 @@ export type MaintenanceSettings = {
 
 export const defaultMaintenanceSettings: MaintenanceSettings = {
   enabled: false,
-  title: "Kısa süreliğine bakımdayız",
+  title: "Çok Yakında Sizlerle",
   message:
-    "Sitemizi sizin için yeniliyoruz. Çok yakında tekrar buradayız. Acil sorularınız için Instagram üzerinden bize ulaşabilirsiniz.",
+    "Web sitemiz üzerinde son dokunuşlarımızı yapıyoruz. Ankara'daki ev stüdyomuzda yenidoğan, hamile, doğum ve gelin & damat fotoğraf çekimleri için çok yakında rezervasyon almaya başlıyoruz.",
 };
 
 export function isMaintenanceForced(): boolean {

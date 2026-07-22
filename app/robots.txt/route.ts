@@ -7,9 +7,9 @@ export async function GET() {
   const body = [
     "User-agent: *",
     "Allow: /",
+    "Allow: /bakim",
     "Disallow: /admin",
     "Disallow: /admin/",
-    "Disallow: /bakim",
     "",
     `# llms.txt: ${base}/llms.txt`,
     `Sitemap: ${base}/sitemap.xml`,

@@ -1,22 +1,49 @@
 import Link from "next/link";
 import type { MaintenanceSettings } from "@/lib/maintenance";
 import { SiteLogo } from "@/components/ui/SiteLogo";
-import type { ContactChannel, SiteConfig } from "@/lib/settings";
+import type { SiteConfig } from "@/lib/settings";
+import { toWhatsAppUrl } from "@/lib/whatsapp";
 
 type Props = {
   maintenance: MaintenanceSettings;
   config: SiteConfig;
-  contactChannels: ContactChannel[];
   contactEmail?: string;
 };
 
-function ContactIcon({ type }: { type: "instagram" | "location" | "hours" | "email" }) {
+type ContactCard = {
+  label: string;
+  value: string;
+  subtitle: string;
+  href?: string;
+  icon: "instagram" | "whatsapp" | "location" | "hours" | "email";
+};
+
+const SLOGAN = "HER KARE, BİR ÖMÜR SAKLANACAK BİR HİKÂYE.";
+const TITLE = "Çok Yakında Sizlerle";
+const DESCRIPTION_PARAGRAPHS = [
+  "Web sitemiz üzerinde son dokunuşlarımızı yapıyoruz.",
+  "Ankara'daki ev stüdyomuzda yenidoğan, hamile, doğum ve gelin & damat fotoğraf çekimleri için çok yakında rezervasyon almaya başlıyoruz.",
+  "Bu süreçte bizimle Instagram veya sağ alttaki WhatsApp butonu üzerinden kolayca iletişime geçebilirsiniz.",
+];
+
+function ContactIcon({
+  type,
+}: {
+  type: "instagram" | "whatsapp" | "location" | "hours" | "email";
+}) {
   const paths = {
     instagram: (
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zm1.5-4.87h.01M6.5 21h11a4.5 4.5 0 0 0 4.5-4.5v-11A4.5 4.5 0 0 0 17.5 3h-11A4.5 4.5 0 0 0 2 7.5v11A4.5 4.5 0 0 0 6.5 21z"
+      />
+    ),
+    whatsapp: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.5 14.5c1.6 1.6 3.7 2.3 5.5 1.7l1.2-.4c.3-.1.6 0 .8.2l2.2 2.2c.3.3.2.8-.2 1-.9.5-2 .7-3.1.5-2.7-.5-5.2-2.2-7-4-1.8-1.8-3.5-4.3-4-7-.2-1.1 0-2.2.5-3.1.2-.4.7-.5 1-.2l2.2 2.2c.2.2.3.5.2.8l-.4 1.2c-.6 1.8.1 3.9 1.7 5.5z"
       />
     ),
     location: (
@@ -43,7 +70,7 @@ function ContactIcon({ type }: { type: "instagram" | "location" | "hours" | "ema
   };
 
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold/25 bg-cream/80 text-gold-dark">
+    <span className="maintenance-card-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold/25 bg-cream/80 text-gold-dark transition-transform duration-500 ease-out">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -58,32 +85,62 @@ function ContactIcon({ type }: { type: "instagram" | "location" | "hours" | "ema
   );
 }
 
-function channelIcon(label: string): "instagram" | "location" | "hours" | "email" {
-  if (label.toLowerCase().includes("instagram")) return "instagram";
-  if (label.toLowerCase().includes("konum")) return "location";
-  if (label.toLowerCase().includes("saat")) return "hours";
-  return "email";
+function buildContactCards(
+  config: SiteConfig,
+  contactEmail?: string,
+): ContactCard[] {
+  const whatsappHref =
+    config.whatsappUrl ?? toWhatsAppUrl(config.whatsappPhone) ?? undefined;
+  const email = contactEmail?.trim() || "merhaba@mrsyilmaz.com";
+
+  return [
+    {
+      label: "Instagram",
+      value: "@ankara.yenidogan.fotograf",
+      subtitle: "Yeni çalışmalarımızı ve duyurularımızı takip edin.",
+      href: "https://www.instagram.com/ankara.yenidogan.fotograf/",
+      icon: "instagram",
+    },
+    {
+      label: "WhatsApp",
+      value: "+90 544 975 83 38",
+      subtitle:
+        "Bilgi almak veya ön rezervasyon oluşturmak için bize yazabilirsiniz.",
+      href: whatsappHref,
+      icon: "whatsapp",
+    },
+    {
+      label: "Konum",
+      value: "Gölbaşı / Ankara",
+      subtitle: "Ev stüdyomuz randevu sistemiyle hizmet vermektedir.",
+      icon: "location",
+    },
+    {
+      label: "Çalışma Şekli",
+      value: "Randevu Sistemi",
+      subtitle:
+        "Tüm çekimler önceden planlanan rezervasyon sistemiyle gerçekleştirilmektedir.",
+      icon: "hours",
+    },
+    {
+      label: "E-posta",
+      value: email,
+      subtitle:
+        "Sorularınız için dilediğiniz zaman bize e-posta gönderebilirsiniz.",
+      href: `mailto:${email}`,
+      icon: "email",
+    },
+  ];
 }
 
 export function MaintenanceView({
-  maintenance,
+  maintenance: _maintenance,
   config,
-  contactChannels,
   contactEmail,
 }: Props) {
   const year = new Date().getFullYear();
-  const contactItems = [
-    ...contactChannels,
-    ...(contactEmail
-      ? [
-          {
-            label: "E-posta",
-            value: contactEmail,
-            href: `mailto:${contactEmail}`,
-          },
-        ]
-      : []),
-  ];
+  const contactItems = buildContactCards(config, contactEmail);
+  const instagramHref = contactItems.find((c) => c.label === "Instagram")?.href;
 
   return (
     <div className="maintenance-scene relative flex min-h-full flex-col overflow-hidden">
@@ -101,9 +158,18 @@ export function MaintenanceView({
         />
       </div>
 
+      {/* Desktop-only soft cue toward the floating WhatsApp button */}
+      <div
+        aria-hidden
+        className="maintenance-wa-guide pointer-events-none absolute right-4 bottom-16 z-20 hidden h-20 w-20 md:block sm:right-6 sm:bottom-20"
+      >
+        <span className="maintenance-wa-guide-ring absolute inset-0 rounded-full border border-gold/20" />
+        <span className="maintenance-wa-guide-ring maintenance-wa-guide-ring-delay absolute inset-2 rounded-full border border-gold/15" />
+      </div>
+
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-12 sm:px-8 sm:py-16">
         <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl">
-          <div className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-8 pt-10 text-center sm:px-12 sm:pt-12">
+          <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-8 pt-10 text-center sm:px-12 sm:pt-12">
             <SiteLogo
               src={config.logoIcon}
               name={config.name}
@@ -113,93 +179,147 @@ export function MaintenanceView({
               className="mx-auto w-fit"
               imageClassName="h-20 w-20 rounded-2xl border-0 bg-transparent shadow-none"
             />
-            <p className="mt-4 text-sm tracking-[0.22em] text-gold-dark uppercase">
-              {config.tagline}
+            <p className="mt-5 text-[11px] leading-relaxed tracking-[0.28em] text-gold-dark uppercase sm:text-xs sm:tracking-[0.32em]">
+              {SLOGAN}
             </p>
-          </div>
+          </header>
 
-          <div className="px-8 py-10 text-center sm:px-12 sm:py-12">
-            <div className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/30 bg-champagne/40 px-4 py-1.5 text-xs font-medium tracking-[0.18em] text-gold-dark uppercase">
+          <section
+            className="px-8 py-10 text-center sm:px-12 sm:py-12"
+            aria-labelledby="coming-soon-title"
+          >
+            <div
+              className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/35 bg-champagne/45 px-4 py-1.5 text-xs font-medium tracking-[0.2em] text-gold-dark uppercase"
+              role="status"
+              aria-label="Çok yakında açılıyoruz"
+            >
               <span className="maintenance-pulse h-1.5 w-1.5 rounded-full bg-gold" />
-              Bakım Modu
+              Çok Yakında
             </div>
 
-            <h1 className="mt-8 font-serif text-3xl leading-tight text-espresso sm:text-4xl">
-              {maintenance.title}
+            <h1
+              id="coming-soon-title"
+              className="mt-8 font-serif text-3xl leading-tight text-espresso sm:text-4xl"
+            >
+              {TITLE}
             </h1>
-            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-mocha sm:text-lg">
-              {maintenance.message}
-            </p>
 
-            <div className="mt-10 flex justify-center gap-1.5">
+            <div className="mx-auto mt-6 max-w-md space-y-4 text-base leading-relaxed text-mocha sm:text-lg">
+              {DESCRIPTION_PARAGRAPHS.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+
+            <div
+              className="mt-10 flex justify-center gap-1.5"
+              aria-hidden
+            >
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="maintenance-dot h-1 w-8 rounded-full bg-gold/35"
-                  style={{ animationDelay: `${i * 0.35}s` }}
+                  className="maintenance-breathe h-1 w-8 rounded-full bg-gold/40"
+                  style={{ animationDelay: `${i * 0.9}s` }}
                 />
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="border-t border-espresso/8 bg-sand/25 px-8 py-8 sm:px-12">
-            <p className="text-center text-xs font-medium tracking-[0.2em] text-gold-dark uppercase">
-              İletişim
+          <section
+            className="border-t border-espresso/8 px-8 py-9 text-center sm:px-12"
+            aria-labelledby="pre-reservation-title"
+          >
+            <h2
+              id="pre-reservation-title"
+              className="font-serif text-xl leading-snug text-espresso sm:text-2xl"
+            >
+              İlk Rezervasyon Dönemimiz Açılıyor
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-mocha sm:text-base">
+              İlk çekim takvimimiz oluşturulurken sınırlı sayıda rezervasyon
+              kabul edeceğiz.
             </p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-mocha sm:text-base">
+              Bilgi almak veya yerinizi erkenden planlamak isterseniz sağ alt
+              köşedeki WhatsApp butonunu kullanarak bizimle iletişime
+              geçebilirsiniz.
+            </p>
+          </section>
+
+          <section
+            className="border-t border-espresso/8 bg-sand/25 px-8 py-8 sm:px-12"
+            aria-labelledby="contact-section-title"
+          >
+            <h2
+              id="contact-section-title"
+              className="text-center text-xs font-medium tracking-[0.22em] text-gold-dark uppercase"
+            >
+              Bize Ulaşın
+            </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {contactItems.map((item) => (
-                <li key={item.label}>
-                  <div className="flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-4 transition-colors hover:border-gold/30 hover:bg-white/70">
-                    <ContactIcon type={channelIcon(item.label)} />
+                <li
+                  key={item.label}
+                  className={
+                    item.label === "E-posta" ? "sm:col-span-2" : undefined
+                  }
+                >
+                  <div className="maintenance-contact-card group flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-4">
+                    <ContactIcon type={item.icon} />
                     <div className="min-w-0 text-left">
-                      <p className="text-[11px] font-medium tracking-[0.15em] text-mist uppercase">
+                      <p className="text-[11px] font-medium tracking-[0.15em] text-mocha uppercase">
                         {item.label}
                       </p>
                       {item.href ? (
                         <a
                           href={item.href}
-                          target={item.href.startsWith("http") ? "_blank" : undefined}
+                          target={
+                            item.href.startsWith("http") ? "_blank" : undefined
+                          }
                           rel={
                             item.href.startsWith("http")
                               ? "noopener noreferrer"
                               : undefined
                           }
-                          className="mt-0.5 block truncate text-sm text-espresso transition-colors hover:text-gold-dark"
+                          className="mt-0.5 block truncate text-sm font-medium text-espresso transition-colors duration-300 hover:text-gold-dark focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+                          aria-label={`${item.label}: ${item.value}`}
                         >
                           {item.value}
                         </a>
                       ) : (
-                        <p className="mt-0.5 text-sm text-espresso">{item.value}</p>
+                        <p className="mt-0.5 text-sm font-medium text-espresso">
+                          {item.value}
+                        </p>
                       )}
+                      <p className="mt-1.5 text-xs leading-relaxed text-mocha">
+                        {item.subtitle}
+                      </p>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
         </div>
       </main>
 
       <footer className="relative z-10 border-t border-espresso/8 bg-cream/60 px-6 py-6 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-2xl flex-col items-center justify-between gap-4 text-center text-xs text-mist sm:flex-row sm:text-left">
+        <div className="mx-auto flex max-w-2xl flex-col items-center justify-between gap-4 text-center text-xs text-mocha sm:flex-row sm:text-left">
           <p>
             © {year} {config.name}. Tüm hakları saklıdır.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link
               href="/gizlilik-politikasi"
-              className="text-mocha transition-colors hover:text-espresso hover:underline hover:underline-offset-4"
+              className="text-mocha transition-colors duration-300 hover:text-espresso hover:underline hover:underline-offset-4 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               Gizlilik Politikası
             </Link>
-            {contactChannels.find((c) => c.label === "Instagram")?.href && (
+            {instagramHref && (
               <a
-                href={
-                  contactChannels.find((c) => c.label === "Instagram")!.href!
-                }
+                href={instagramHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-mocha transition-colors hover:text-espresso hover:underline hover:underline-offset-4"
+                className="text-mocha transition-colors duration-300 hover:text-espresso hover:underline hover:underline-offset-4 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
               >
                 Instagram
               </a>
