@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { MaintenanceSettings } from "@/lib/maintenance";
-import { SiteLogo } from "@/components/ui/SiteLogo";
 import type { SiteConfig } from "@/lib/settings";
 import { toWhatsAppUrl } from "@/lib/whatsapp";
 
@@ -22,7 +21,7 @@ const SLOGAN = "HER KARE, BİR ÖMÜR SAKLANACAK BİR HİKÂYE.";
 const TITLE = "Çok Yakında Sizlerle";
 const DESCRIPTION_PARAGRAPHS = [
   "Web sitemiz üzerinde son dokunuşlarımızı yapıyoruz.",
-  "Ankara'daki ev stüdyomuzda yenidoğan, hamile, doğum ve gelin & damat fotoğraf çekimleri için çok yakında rezervasyon almaya başlıyoruz.",
+  "Ankara'daki ev stüdyomuzda yenidoğan, doğum ve gelin & damat fotoğraf çekimleri için rezervasyon almaya başlıyoruz.",
   "Bu süreçte bizimle Instagram veya sağ alttaki WhatsApp butonu üzerinden kolayca iletişime geçebilirsiniz.",
 ];
 
@@ -170,14 +169,11 @@ export function MaintenanceView({
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-8 sm:px-8 sm:py-10 lg:py-8">
         <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl lg:max-w-6xl">
           <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-6 pt-8 text-center sm:px-12 sm:pb-8 sm:pt-10 lg:px-14 lg:pb-7 lg:pt-9">
-            <SiteLogo
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={config.logoIcon}
-              name={config.name}
-              href={undefined}
-              variant="mark"
-              showName={false}
-              className="mx-auto w-fit"
-              imageClassName="h-16 w-16 rounded-2xl border-0 bg-transparent shadow-none sm:h-20 sm:w-20"
+              alt={config.name}
+              className="mx-auto h-[4.8rem] w-[4.8rem] object-contain sm:h-24 sm:w-24"
             />
             <p className="mt-4 text-[11px] leading-relaxed tracking-[0.28em] text-gold-dark uppercase sm:mt-5 sm:text-xs sm:tracking-[0.32em]">
               {SLOGAN}
