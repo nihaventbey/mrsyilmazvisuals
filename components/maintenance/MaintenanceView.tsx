@@ -148,7 +148,7 @@ export function MaintenanceView({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,#f4e8d3_0%,#fbf7f0_45%,#f6efe2_100%)]" />
         <div className="maintenance-orb absolute -left-24 top-20 h-72 w-72 rounded-full bg-champagne/50 blur-3xl" />
         <div className="maintenance-orb maintenance-orb-delay absolute -right-16 bottom-32 h-80 w-80 rounded-full bg-gold/20 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-px w-[min(90vw,48rem)] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+        <div className="absolute left-1/2 top-1/3 h-px w-[min(92vw,72rem)] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
@@ -167,9 +167,9 @@ export function MaintenanceView({
         <span className="maintenance-wa-guide-ring maintenance-wa-guide-ring-delay absolute inset-2 rounded-full border border-gold/15" />
       </div>
 
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-12 sm:px-8 sm:py-16">
-        <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl">
-          <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-8 pt-10 text-center sm:px-12 sm:pt-12">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-8 sm:px-8 sm:py-10 lg:py-8">
+        <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl lg:max-w-6xl">
+          <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-6 pt-8 text-center sm:px-12 sm:pb-8 sm:pt-10 lg:px-14 lg:pb-7 lg:pt-9">
             <SiteLogo
               src={config.logoIcon}
               name={config.name}
@@ -177,133 +177,132 @@ export function MaintenanceView({
               variant="mark"
               showName={false}
               className="mx-auto w-fit"
-              imageClassName="h-20 w-20 rounded-2xl border-0 bg-transparent shadow-none"
+              imageClassName="h-16 w-16 rounded-2xl border-0 bg-transparent shadow-none sm:h-20 sm:w-20"
             />
-            <p className="mt-5 text-[11px] leading-relaxed tracking-[0.28em] text-gold-dark uppercase sm:text-xs sm:tracking-[0.32em]">
+            <p className="mt-4 text-[11px] leading-relaxed tracking-[0.28em] text-gold-dark uppercase sm:mt-5 sm:text-xs sm:tracking-[0.32em]">
               {SLOGAN}
             </p>
           </header>
 
-          <section
-            className="px-8 py-10 text-center sm:px-12 sm:py-12"
-            aria-labelledby="coming-soon-title"
-          >
-            <div
-              className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/35 bg-champagne/45 px-4 py-1.5 text-xs font-medium tracking-[0.2em] text-gold-dark uppercase"
-              role="status"
-              aria-label="Çok yakında açılıyoruz"
-            >
-              <span className="maintenance-pulse h-1.5 w-1.5 rounded-full bg-gold" />
-              Çok Yakında
-            </div>
-
-            <h1
-              id="coming-soon-title"
-              className="mt-8 font-serif text-3xl leading-tight text-espresso sm:text-4xl"
-            >
-              {TITLE}
-            </h1>
-
-            <div className="mx-auto mt-6 max-w-md space-y-4 text-base leading-relaxed text-mocha sm:text-lg">
-              {DESCRIPTION_PARAGRAPHS.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
-
-            <div
-              className="mt-10 flex justify-center gap-1.5"
-              aria-hidden
-            >
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="maintenance-breathe h-1 w-8 rounded-full bg-gold/40"
-                  style={{ animationDelay: `${i * 0.9}s` }}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section
-            className="border-t border-espresso/8 px-8 py-9 text-center sm:px-12"
-            aria-labelledby="pre-reservation-title"
-          >
-            <h2
-              id="pre-reservation-title"
-              className="font-serif text-xl leading-snug text-espresso sm:text-2xl"
-            >
-              İlk Rezervasyon Dönemimiz Açılıyor
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-mocha sm:text-base">
-              İlk çekim takvimimiz oluşturulurken sınırlı sayıda rezervasyon
-              kabul edeceğiz.
-            </p>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-mocha sm:text-base">
-              Bilgi almak veya yerinizi erkenden planlamak isterseniz sağ alt
-              köşedeki WhatsApp butonunu kullanarak bizimle iletişime
-              geçebilirsiniz.
-            </p>
-          </section>
-
-          <section
-            className="border-t border-espresso/8 bg-sand/25 px-8 py-8 sm:px-12"
-            aria-labelledby="contact-section-title"
-          >
-            <h2
-              id="contact-section-title"
-              className="text-center text-xs font-medium tracking-[0.22em] text-gold-dark uppercase"
-            >
-              Bize Ulaşın
-            </h2>
-            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-              {contactItems.map((item) => (
-                <li
-                  key={item.label}
-                  className={
-                    item.label === "E-posta" ? "sm:col-span-2" : undefined
-                  }
+          <div className="lg:grid lg:grid-cols-12 lg:items-stretch">
+            <div className="lg:col-span-7 lg:border-r lg:border-espresso/8">
+              <section
+                className="px-8 py-8 text-center sm:px-12 sm:py-10 lg:px-14 lg:py-10 lg:text-left"
+                aria-labelledby="coming-soon-title"
+              >
+                <div
+                  className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/35 bg-champagne/45 px-4 py-1.5 text-xs font-medium tracking-[0.2em] text-gold-dark uppercase lg:mx-0"
+                  role="status"
+                  aria-label="Çok yakında açılıyoruz"
                 >
-                  <div className="maintenance-contact-card group flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-4">
-                    <ContactIcon type={item.icon} />
-                    <div className="min-w-0 text-left">
-                      <p className="text-[11px] font-medium tracking-[0.15em] text-mocha uppercase">
-                        {item.label}
-                      </p>
-                      {item.href ? (
-                        <a
-                          href={item.href}
-                          target={
-                            item.href.startsWith("http") ? "_blank" : undefined
-                          }
-                          rel={
-                            item.href.startsWith("http")
-                              ? "noopener noreferrer"
-                              : undefined
-                          }
-                          className="mt-0.5 block truncate text-sm font-medium text-espresso transition-colors duration-300 hover:text-gold-dark focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
-                          aria-label={`${item.label}: ${item.value}`}
-                        >
-                          {item.value}
-                        </a>
-                      ) : (
-                        <p className="mt-0.5 text-sm font-medium text-espresso">
-                          {item.value}
+                  <span className="maintenance-pulse h-1.5 w-1.5 rounded-full bg-gold" />
+                  Çok Yakında
+                </div>
+
+                <h1
+                  id="coming-soon-title"
+                  className="mt-6 font-serif text-3xl leading-tight text-espresso sm:mt-7 sm:text-4xl lg:text-[2.75rem]"
+                >
+                  {TITLE}
+                </h1>
+
+                <div className="mx-auto mt-5 max-w-xl space-y-3 text-base leading-relaxed text-mocha sm:mt-6 sm:space-y-3.5 sm:text-lg lg:mx-0">
+                  {DESCRIPTION_PARAGRAPHS.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+
+                <div
+                  className="mt-8 flex justify-center gap-1.5 lg:justify-start"
+                  aria-hidden
+                >
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="maintenance-breathe h-1 w-8 rounded-full bg-gold/40"
+                      style={{ animationDelay: `${i * 0.9}s` }}
+                    />
+                  ))}
+                </div>
+              </section>
+
+              <section
+                className="border-t border-espresso/8 px-8 py-7 text-center sm:px-12 sm:py-8 lg:px-14 lg:py-8 lg:text-left"
+                aria-labelledby="pre-reservation-title"
+              >
+                <h2
+                  id="pre-reservation-title"
+                  className="font-serif text-xl leading-snug text-espresso sm:text-2xl"
+                >
+                  İlk Rezervasyon Dönemimiz Açılıyor
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-mocha sm:mt-4 sm:text-base lg:mx-0">
+                  İlk çekim takvimimiz oluşturulurken sınırlı sayıda rezervasyon
+                  kabul edeceğiz.
+                </p>
+                <p className="mx-auto mt-2.5 max-w-xl text-sm leading-relaxed text-mocha sm:text-base lg:mx-0">
+                  Bilgi almak veya yerinizi erkenden planlamak isterseniz sağ alt
+                  köşedeki WhatsApp butonunu kullanarak bizimle iletişime
+                  geçebilirsiniz.
+                </p>
+              </section>
+            </div>
+
+            <section
+              className="border-t border-espresso/8 bg-sand/25 px-8 py-7 sm:px-12 sm:py-8 lg:col-span-5 lg:border-t-0 lg:px-8 lg:py-10 xl:px-10"
+              aria-labelledby="contact-section-title"
+            >
+              <h2
+                id="contact-section-title"
+                className="text-center text-xs font-medium tracking-[0.22em] text-gold-dark uppercase lg:text-left"
+              >
+                Bize Ulaşın
+              </h2>
+              <ul className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 lg:grid-cols-1 lg:gap-3.5">
+                {contactItems.map((item) => (
+                  <li key={item.label}>
+                    <div className="maintenance-contact-card group flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-3.5 sm:p-4">
+                      <ContactIcon type={item.icon} />
+                      <div className="min-w-0 text-left">
+                        <p className="text-[11px] font-medium tracking-[0.15em] text-mocha uppercase">
+                          {item.label}
                         </p>
-                      )}
-                      <p className="mt-1.5 text-xs leading-relaxed text-mocha">
-                        {item.subtitle}
-                      </p>
+                        {item.href ? (
+                          <a
+                            href={item.href}
+                            target={
+                              item.href.startsWith("http") ? "_blank" : undefined
+                            }
+                            rel={
+                              item.href.startsWith("http")
+                                ? "noopener noreferrer"
+                                : undefined
+                            }
+                            className="mt-0.5 block truncate text-sm font-medium text-espresso transition-colors duration-300 hover:text-gold-dark focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+                            aria-label={`${item.label}: ${item.value}`}
+                          >
+                            {item.value}
+                          </a>
+                        ) : (
+                          <p className="mt-0.5 text-sm font-medium text-espresso">
+                            {item.value}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs leading-relaxed text-mocha">
+                          {item.subtitle}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
         </div>
       </main>
 
-      <footer className="relative z-10 border-t border-espresso/8 bg-cream/60 px-6 py-6 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-2xl flex-col items-center justify-between gap-4 text-center text-xs text-mocha sm:flex-row sm:text-left">
+      <footer className="relative z-10 border-t border-espresso/8 bg-cream/60 px-6 py-5 backdrop-blur-sm sm:py-6">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center justify-between gap-4 text-center text-xs text-mocha sm:flex-row sm:text-left lg:max-w-6xl">
           <p>
             © {year} {config.name}. Tüm hakları saklıdır.
           </p>
