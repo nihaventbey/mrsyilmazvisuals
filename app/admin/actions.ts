@@ -260,6 +260,8 @@ export async function updatePortfolioImage(
     }
   }
 
+  const categoryId = String(formData.get("category_id") ?? "").trim();
+
   const { error } = await supabase
     .from("portfolio_images")
     .update({
@@ -267,6 +269,7 @@ export async function updatePortfolioImage(
       orientation,
       sort_order: sortOrder,
       image_path: imagePath,
+      ...(categoryId ? { category_id: categoryId } : {}),
     })
     .eq("id", id);
 
@@ -860,20 +863,129 @@ export async function testInstagramGraphConnection(): Promise<FormState> {
 
 // ============================= categories ==============================
 
+function slugifyCategoryInput(raw: string): string {
+  return String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "kategori";
+}
+
+export async function createCategory(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const title = String(formData.get("title") ?? "").trim();
+  let slug = String(formData.get("slug") ?? "").trim();
+  if (!slug && title) slug = slugifyCategoryInput(title);
+  const parentRaw = String(formData.get("parent_id") ?? "").trim();
+  const parent_id = parentRaw || null;
+
+  if (!title || !slug) {
+    return { status: "error", message: "Başlık ve slug zorunludur." };
+  }
+
+  if (parent_id) {
+    const { data: parent } = await supabase
+      .from("categories")
+      .select("id, parent_id")
+      .eq("id", parent_id)
+      .maybeSingle();
+    if (!parent) {
+      return { status: "error", message: "Üst kategori bulunamadı." };
+    }
+    if (parent.parent_id) {
+      return {
+        status: "error",
+        message: "Alt kategorinin altına kategori eklenemez (tek seviye).",
+      };
+    }
+  }
+
+  const { error } = await supabase.from("categories").insert({
+    title,
+    slug,
+    short: String(formData.get("short") ?? "").trim(),
+    description: String(formData.get("description") ?? "").trim(),
+    sort_order: Number(formData.get("sort_order") ?? 0),
+    parent_id,
+  });
+
+  if (error) {
+    return { status: "error", message: `Kaydedilemedi: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/kategoriler");
+  revalidatePath("/admin/portfolyo");
+  return { status: "success", message: "Kategori oluşturuldu." };
+}
+
 export async function updateCategory(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const supabase = await authedClient();
   const id = String(formData.get("id") ?? "");
+  const parentRaw = String(formData.get("parent_id") ?? "").trim();
+  const parent_id = parentRaw || null;
+
+  if (!id) {
+    return { status: "error", message: "Kategori bulunamadı." };
+  }
+
+  if (parent_id === id) {
+    return { status: "error", message: "Kategori kendisinin üstü olamaz." };
+  }
+
+  if (parent_id) {
+    const { data: parent } = await supabase
+      .from("categories")
+      .select("id, parent_id")
+      .eq("id", parent_id)
+      .maybeSingle();
+    if (!parent) {
+      return { status: "error", message: "Üst kategori bulunamadı." };
+    }
+    if (parent.parent_id) {
+      return {
+        status: "error",
+        message: "Alt kategorinin altına kategori eklenemez (tek seviye).",
+      };
+    }
+    const { data: children } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("parent_id", id)
+      .limit(1);
+    if ((children ?? []).length > 0) {
+      return {
+        status: "error",
+        message:
+          "Alt kategorisi olan bir kategori başka bir üstün altına taşınamaz.",
+      };
+    }
+  }
+
   const payload = {
     title: String(formData.get("title") ?? ""),
     short: String(formData.get("short") ?? ""),
     description: String(formData.get("description") ?? ""),
     sort_order: Number(formData.get("sort_order") ?? 0),
+    parent_id,
   };
 
-  if (!id || !payload.title) {
+  if (!payload.title) {
     return { status: "error", message: "Başlık zorunludur." };
   }
 
@@ -888,7 +1000,122 @@ export async function updateCategory(
 
   revalidateSite();
   revalidatePath("/admin/kategoriler");
+  revalidatePath("/admin/portfolyo");
   return { status: "success", message: "Kategori güncellendi." };
+}
+
+export async function deleteCategory(formData: FormData): Promise<FormState> {
+  const supabase = await authedClient();
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { status: "error", message: "Kategori bulunamadı." };
+  }
+
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) {
+    return { status: "error", message: `Silinemedi: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/kategoriler");
+  revalidatePath("/admin/portfolyo");
+  return { status: "success", message: "Kategori silindi." };
+}
+
+export async function bulkDeletePortfolioImages(
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const ids = formData
+    .getAll("ids")
+    .map((v) => String(v))
+    .filter(Boolean);
+  if (ids.length === 0) {
+    return { status: "error", message: "Görsel seçilmedi." };
+  }
+
+  const { data: rows } = await supabase
+    .from("portfolio_images")
+    .select("id, image_path")
+    .in("id", ids);
+
+  const paths = (rows ?? [])
+    .map((r) => r.image_path)
+    .filter((p): p is string => Boolean(p));
+  if (paths.length) {
+    await supabase.storage.from("portfolio").remove(paths);
+  }
+  const { error } = await supabase
+    .from("portfolio_images")
+    .delete()
+    .in("id", ids);
+  if (error) {
+    return { status: "error", message: `Silinemedi: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/portfolyo");
+  return { status: "success", message: `${ids.length} görsel silindi.` };
+}
+
+export async function bulkMovePortfolioImages(
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const ids = formData
+    .getAll("ids")
+    .map((v) => String(v))
+    .filter(Boolean);
+  const categoryId = String(formData.get("category_id") ?? "");
+  if (ids.length === 0 || !categoryId) {
+    return { status: "error", message: "Görsel ve hedef kategori seçin." };
+  }
+
+  const { error } = await supabase
+    .from("portfolio_images")
+    .update({ category_id: categoryId })
+    .in("id", ids);
+  if (error) {
+    return { status: "error", message: `Taşınamadı: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/portfolyo");
+  return {
+    status: "success",
+    message: `${ids.length} görsel taşındı.`,
+  };
+}
+
+export async function bulkSetFeatured(
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const ids = formData
+    .getAll("ids")
+    .map((v) => String(v))
+    .filter(Boolean);
+  const next = formData.get("featured") === "true";
+  if (ids.length === 0) {
+    return { status: "error", message: "Görsel seçilmedi." };
+  }
+
+  const { error } = await supabase
+    .from("portfolio_images")
+    .update({ is_featured: next })
+    .in("id", ids);
+  if (error) {
+    return { status: "error", message: `Güncellenemedi: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/portfolyo");
+  return {
+    status: "success",
+    message: next
+      ? `${ids.length} görsel öne çıkarıldı.`
+      : `${ids.length} görsel öne çıkarmadan kaldırıldı.`,
+  };
 }
 
 // ============================== giveaways ==============================

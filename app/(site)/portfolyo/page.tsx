@@ -8,7 +8,7 @@ import { getPortfolioCategories } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Portfolyo",
   description:
-    "Bebek, doğum, hamile ve düğün çekimlerinden seçkiler. Kategorilere göz atın ve tarzımı keşfedin.",
+    "Yenidoğan, doğum, düğün ve etkinlik çekimlerinden seçkiler. Kategorilere göz atın ve tarzımı keşfedin.",
   alternates: { canonical: "/portfolyo" },
 };
 
@@ -30,7 +30,7 @@ export default async function PortfolioPage() {
           {categories.map((category, i) => (
             <Link
               key={category.slug}
-              href={`/portfolyo/${category.slug}`}
+              href={category.href}
               className="group"
             >
               <div className="overflow-hidden rounded-2xl">
@@ -50,7 +50,12 @@ export default async function PortfolioPage() {
                 )}
               </div>
               <div className="mt-5">
-                <h2 className="text-2xl text-espresso transition-colors group-hover:text-gold-dark">
+                {category.short && (
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold-dark">
+                    {category.short}
+                  </p>
+                )}
+                <h2 className="mt-2 text-2xl text-espresso transition-colors group-hover:text-gold-dark">
                   {category.title}
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-mocha">

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/content";
 import { getMaintenanceSettings, isMaintenanceForced } from "@/lib/maintenance";
+import { getBookableCategories } from "@/lib/portfolio-categories";
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const maintenance = await getMaintenanceSettings();
   const maintenanceActive = isMaintenanceForced() || maintenance.enabled;
 
-  const [images, posts, bookings, messages, recentBookings] =
+  const [images, posts, bookings, messages, recentBookings, bookable] =
     await Promise.all([
       supabase
         .from("portfolio_images")
@@ -27,6 +28,7 @@ export default async function AdminDashboardPage() {
         .select("id, name, shoot_type, preferred_date, status, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
+      getBookableCategories(),
     ]);
 
   const stats = [
@@ -36,12 +38,9 @@ export default async function AdminDashboardPage() {
     { label: "Okunmamış Mesaj", value: messages.count ?? 0, href: "/admin/mesajlar" },
   ];
 
-  const typeLabels: Record<string, string> = {
-    bebek: "Bebek",
-    dogum: "Doğum",
-    hamile: "Hamile",
-    dugun: "Düğün",
-  };
+  const typeLabels = Object.fromEntries(
+    bookable.map((c) => [c.slug, c.title]),
+  );
 
   return (
     <div>

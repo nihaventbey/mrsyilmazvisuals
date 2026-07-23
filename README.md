@@ -1,6 +1,6 @@
 # Mrs Yılmaz Visuals
 
-Bebek, doğum, hamile ve düğün çekimleri yapan bir fotoğrafçı için Next.js +
+Bebek, doğum, düğün ve etkinlik çekimleri yapan bir fotoğrafçı için Next.js +
 Supabase ile geliştirilmiş kişisel biyografi, portfolyo ve yönetim paneli
 sitesi.
 
@@ -51,7 +51,7 @@ npm run dev
 
 | Tablo | Amaç |
 |-------|------|
-| `categories` | Portfolyo kategorileri (bebek, doğum, hamile, düğün) |
+| `categories` | Portfolyo kategorileri (hiyerarşik: bebek, doğum, düğün, etkinlik…) |
 | `portfolio_images` | Galeri görselleri (storage yolu + öne çıkan işareti) |
 | `blog_posts` | Markdown içerikli blog yazıları (taslak/yayın) |
 | `packages` | Fiyat paketleri |

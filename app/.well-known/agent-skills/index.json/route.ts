@@ -21,7 +21,7 @@ const SKILLS = [
     id: "services",
     name: "Hizmetler",
     description:
-      "Doğum, hamile, bebek, çocuk ve düğün fotoğrafçılığı hizmet listesi.",
+      "Doğum, bebek, çocuk, düğün ve etkinlik fotoğrafçılığı hizmet listesi.",
     file: "services.md",
   },
 ] as const;

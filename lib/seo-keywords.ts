@@ -20,7 +20,6 @@ export const DEFAULT_SEO_KEYWORDS = [
   "doğum fotoğrafçısı",
   "bebek fotoğrafçısı",
   "çocuk fotoğrafçısı",
-  "hamile çekimi",
   "yenidoğan çekimi",
   "düğün fotoğrafçısı",
   "Ankara Gölbaşı fotoğraf çekimi",

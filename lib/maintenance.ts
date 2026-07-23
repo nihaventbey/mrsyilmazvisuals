@@ -14,7 +14,7 @@ export const defaultMaintenanceSettings: MaintenanceSettings = {
   enabled: false,
   title: "Çok Yakında Sizlerle",
   message:
-    "Web sitemiz üzerinde son dokunuşlarımızı yapıyoruz. Ankara'daki ev stüdyomuzda yenidoğan, hamile, doğum ve gelin & damat fotoğraf çekimleri için çok yakında rezervasyon almaya başlıyoruz.",
+    "Web sitemiz üzerinde son dokunuşlarımızı yapıyoruz. Ankara'daki ev stüdyomuzda yenidoğan, doğum ve gelin & damat fotoğraf çekimleri için çok yakında rezervasyon almaya başlıyoruz.",
 };
 
 export function isMaintenanceForced(): boolean {

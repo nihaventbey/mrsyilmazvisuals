@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { BookingForm } from "@/components/forms/BookingForm";
-import { getServices } from "@/lib/settings";
+import { getBookableCategories } from "@/lib/portfolio-categories";
 
 export const metadata: Metadata = {
   title: "Rezervasyon",
   description:
-    "Bebek, doğum, hamile veya düğün çekiminiz için rezervasyon oluşturun. Tercih ettiğiniz tarihi ve konsepti paylaşın.",
+    "Bebek, doğum, düğün veya etkinlik çekiminiz için rezervasyon oluşturun. Tercih ettiğiniz tarihi ve konsepti paylaşın.",
   alternates: { canonical: "/rezervasyon" },
 };
 
@@ -30,11 +30,17 @@ export default async function BookingPage({
 }: {
   searchParams: Promise<{ tur?: string }>;
 }) {
-  const [params, services] = await Promise.all([
+  const [params, bookable] = await Promise.all([
     searchParams,
-    getServices(),
+    getBookableCategories(),
   ]);
   const tur = params.tur;
+  const services = bookable.map((c) => ({
+    slug: c.slug,
+    title: c.title,
+    short: c.title,
+    description: "",
+  }));
 
   return (
     <>

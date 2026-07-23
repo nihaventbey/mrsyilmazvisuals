@@ -8,7 +8,7 @@ import { buildFaqPageJsonLd } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Sık Sorulan Sorular",
   description:
-    "Doğum, hamile, yenidoğan ve bebek çekimleri hakkında sık sorulan sorular ve yanıtları.",
+    "Doğum, yenidoğan ve bebek çekimleri hakkında sık sorulan sorular ve yanıtları.",
   alternates: { canonical: "/sss" },
 };
 

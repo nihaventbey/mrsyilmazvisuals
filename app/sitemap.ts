@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getBlogPosts, getPortfolioCategories } from "@/lib/content";
 import { isMaintenanceActive } from "@/lib/maintenance";
+import { getCategoryRows } from "@/lib/portfolio-categories";
 import { getSiteConfig } from "@/lib/settings";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -40,10 +41,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
   }));
 
-  const categoryRoutes = (await getPortfolioCategories()).map((category) => ({
-    url: `${base}/portfolyo/${category.slug}`,
-    lastModified: new Date(),
-  }));
+  const tops = await getPortfolioCategories();
+  const rows = await getCategoryRows();
+  const byId = new Map(rows.map((r) => [r.id, r]));
+
+  const categoryRoutes = [
+    ...tops.map((category) => ({
+      url: `${base}${category.href}`,
+      lastModified: new Date(),
+    })),
+    ...rows
+      .filter((r) => r.parent_id)
+      .map((child) => {
+        const parent = child.parent_id ? byId.get(child.parent_id) : null;
+        if (!parent) return null;
+        return {
+          url: `${base}/portfolyo/${parent.slug}/${child.slug}`,
+          lastModified: new Date(),
+        };
+      })
+      .filter((r): r is { url: string; lastModified: Date } => Boolean(r)),
+  ];
 
   const blogRoutes = (await getBlogPosts()).map((post) => ({
     url: `${base}/blog/${post.slug}`,

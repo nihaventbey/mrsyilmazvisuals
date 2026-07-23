@@ -3,6 +3,7 @@
 import { verifyAntiSpam } from "@/lib/anti-spam";
 import { sendNotificationEmail } from "@/lib/email";
 import { isMaintenanceActive } from "@/lib/maintenance";
+import { getBookableCategories } from "@/lib/portfolio-categories";
 import {
   createPublicClient,
   isSupabaseConfigured,
@@ -12,13 +13,6 @@ import {
   contactSchema,
   type FormState,
 } from "@/lib/validations";
-
-const serviceLabels: Record<string, string> = {
-  bebek: "Bebek Çekimi",
-  dogum: "Doğum Fotoğrafçılığı",
-  hamile: "Hamile Çekimi",
-  dugun: "Düğün Çekimi",
-};
 
 export async function submitContact(
   _prev: FormState,
@@ -131,6 +125,17 @@ export async function submitBooking(
 
   const { name, email, phone, type, date, location, notes } = parsed.data;
 
+  const bookable = await getBookableCategories();
+  const typeLabel =
+    bookable.find((c) => c.slug === type)?.title ?? type;
+  if (!bookable.some((c) => c.slug === type)) {
+    return {
+      status: "error",
+      message: "Lütfen geçerli bir çekim türü seçin.",
+      errors: { type: ["Lütfen geçerli bir çekim türü seçin."] },
+    };
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = createPublicClient();
     const { error } = await supabase.from("bookings").insert({
@@ -153,8 +158,8 @@ export async function submitBooking(
 
   try {
     await sendNotificationEmail({
-      subject: `Yeni rezervasyon talebi — ${serviceLabels[type]} (${name})`,
-      text: `Ad: ${name}\nE-posta: ${email}\nTelefon: ${phone}\nÇekim türü: ${serviceLabels[type]}\nTercih edilen tarih: ${date}\nKonum: ${location || "-"}\n\nNotlar:\n${notes || "-"}`,
+      subject: `Yeni rezervasyon talebi — ${typeLabel} (${name})`,
+      text: `Ad: ${name}\nE-posta: ${email}\nTelefon: ${phone}\nÇekim türü: ${typeLabel}\nTercih edilen tarih: ${date}\nKonum: ${location || "-"}\n\nNotlar:\n${notes || "-"}`,
     });
   } catch {
     if (!isSupabaseConfigured()) {

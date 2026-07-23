@@ -5,7 +5,7 @@ export const defaultSettings: SiteSettings = {
     name: "Mrs. Yılmaz Visuals",
     tagline: "Anların en zarif hali",
     description:
-      "Doğum, hamile, yenidoğan ve bebek çekimlerinde samimi ve güven veren bir deneyim sunuyorum. 2016'dan beri fotoğrafçılık yapıyor; 2019'dan itibaren doğum fotoğrafçılığına odaklanıyorum.",
+      "Doğum, yenidoğan ve bebek çekimlerinde samimi ve güven veren bir deneyim sunuyorum. 2016'dan beri fotoğrafçılık yapıyor; 2019'dan itibaren doğum fotoğrafçılığına odaklanıyorum.",
     author: "Melike Yılmaz",
     logoImage: "/images/logo.svg",
     logoIcon: "/images/logo.svg",
@@ -27,15 +27,15 @@ export const defaultSettings: SiteSettings = {
   },
   about: {
     pageDescription:
-      "Doğum, hamile, yenidoğan ve bebek çekimlerinde ailelerin en değerli anlarını samimi, rahat ve güven veren bir ortamda ölümsüzleştiriyorum.",
+      "Doğum, yenidoğan ve bebek çekimlerinde ailelerin en değerli anlarını samimi, rahat ve güven veren bir ortamda ölümsüzleştiriyorum.",
     aboutImage: "/images/melike-yilmaz.jpg",
     bioParagraphs: [
-      "Ben Melike Yılmaz. 2016'dan beri profesyonel fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, hamile, yenidoğan ve bebek çekimlerine odaklandım. Her çekimde önce sizinle tanışıyor, süreci birlikte planlıyor ve rahat hissetmenizi sağlıyorum.",
+      "Ben Melike Yılmaz. 2016'dan beri profesyonel fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, yenidoğan ve bebek çekimlerine odaklandım. Her çekimde önce sizinle tanışıyor, süreci birlikte planlıyor ve rahat hissetmenizi sağlıyorum.",
       "Doğum fotoğrafçılığında Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalıyım. Doğum öncesinde ailelerle iletişim kurmayı, herkesin hazır ve huzurlu olmasını önemsiyorum — çünkü en güzel kareler, güvende hissedildiğiniz anlarda doğar.",
       "Samimi, doğal ve poz vermekten çok gerçek duyguları yakalamayı seviyorum. Yıllar içinde birçok ailemle kalıcı dostluklar kurduk. Birlikte, yıllar sonra bile aynı duyguyu hissettirecek kareler yaratacağız.",
     ],
     previewParagraphs: [
-      "2016'dan beri fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, hamile, yenidoğan ve bebek çekimlerine odaklandım. Çekim öncesinde iletişim kurmayı, samimi ve rahat bir ortam oluşturmayı önemsiyorum.",
+      "2016'dan beri fotoğrafçılık yapıyorum; 2019'dan itibaren doğum, yenidoğan ve bebek çekimlerine odaklandım. Çekim öncesinde iletişim kurmayı, samimi ve rahat bir ortam oluşturmayı önemsiyorum.",
       "Acıbadem, Medistate ve Hisar Intercontinental hastanelerinde sertifikalı doğum fotoğrafçısıyım. Amacım, yıllar sonra baktığınızda o günün duygusunu yeniden hissettirecek kareler bırakmak.",
     ],
     timeline: [
@@ -47,7 +47,7 @@ export const defaultSettings: SiteSettings = {
       {
         year: "2019",
         title: "Doğum fotoğrafçılığı",
-        text: "Doğum, hamile ve yenidoğan çekimlerine odaklanarak bu alanda uzmanlaştım.",
+        text: "Doğum ve yenidoğan çekimlerine odaklanarak bu alanda uzmanlaştım.",
       },
       {
         year: "2021",
@@ -91,7 +91,7 @@ export const defaultSettings: SiteSettings = {
     servicesEyebrow: "Hizmetler",
     servicesTitle: "Her an için özel bir dokunuş",
     servicesDescription:
-      "Doğumdan düğüne, bebekten hamileliğe — hikâyenizi anlatan zamansız kareler oluşturuyorum.",
+      "Doğumdan düğüne, yenidoğandan etkinliğe — hikâyenizi anlatan zamansız kareler oluşturuyorum.",
     ctaTitle: "Anılarınızı birlikte ölümsüzleştirelim",
     ctaDescription:
       "Size özel bir çekim planlamak veya müsaitlik durumunu öğrenmek için hemen iletişime geçin.",

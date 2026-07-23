@@ -31,21 +31,6 @@
       ]
     },
     {
-      "slug": "hamile",
-      "title": "Hamile Çekimleri",
-      "description": "Bekleyişin zarafetini; zarif ışık, doğal pozlar ve size özel konseptlerle yansıtıyorum.",
-      "images": [
-        { "id": "hamile-1", "caption": "Bekleyiş", "orientation": "portrait" },
-        { "id": "hamile-2", "caption": "Zarafet", "orientation": "portrait" },
-        { "id": "hamile-3", "caption": "Doğa içinde", "orientation": "landscape" },
-        { "id": "hamile-4", "caption": "İki kalp", "orientation": "portrait" },
-        { "id": "hamile-5", "caption": "Altın saat", "orientation": "landscape" },
-        { "id": "hamile-6", "caption": "Sükunet", "orientation": "portrait" },
-        { "id": "hamile-7", "caption": "Anne olmak", "orientation": "portrait" },
-        { "id": "hamile-8", "caption": "Işık ve gölge", "orientation": "landscape" }
-      ]
-    },
-    {
       "slug": "dugun",
       "title": "Düğün Çekimleri",
       "description": "Düğün gününüzün coşkusunu ve zarafetini hikâye anlatan zamansız karelerle yakalıyorum.",
@@ -58,6 +43,15 @@
         { "id": "dugun-6", "caption": "Kutlama", "orientation": "landscape" },
         { "id": "dugun-7", "caption": "Zarafet", "orientation": "portrait" },
         { "id": "dugun-8", "caption": "Sonsuza dek", "orientation": "landscape" }
+      ]
+    },
+    {
+      "slug": "etkinlik",
+      "title": "Etkinlik",
+      "description": "Konser, organizasyon ve özel etkinlik çekimlerinden seçilmiş kareler.",
+      "images": [
+        { "id": "etkinlik-1", "caption": "Sahne ışığı", "orientation": "landscape" },
+        { "id": "etkinlik-2", "caption": "Kalabalık", "orientation": "portrait" }
       ]
     }
   ]

@@ -41,7 +41,7 @@ export const defaultLegalSettings: LegalSettings = {
       list: [
         "İletişim ve rezervasyon taleplerini değerlendirmek",
         "Çekim planlaması, sözleşme ve randevu süreçlerini yürütmek",
-        "Doğum, hamile, yenidoğan ve bebek çekimlerinde güvenli ve konforlu bir deneyim sunmak",
+        "Doğum, yenidoğan ve bebek çekimlerinde güvenli ve konforlu bir deneyim sunmak",
         "Teslimat, arşivleme ve müşteri desteği sağlamak",
         "Yasal yükümlülükleri yerine getirmek ve olası uyuşmazlıklarda delil oluşturmak",
         "Açık rızanız olması halinde portfolyo, web sitesi veya sosyal medyada örnek çalışma paylaşımı yapmak",

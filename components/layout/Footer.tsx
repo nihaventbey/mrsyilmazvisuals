@@ -27,7 +27,7 @@ export async function Footer({
         <div className="lg:col-span-1">
           <p className="font-serif text-2xl text-espresso">{siteName}</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-mocha">
-            {tagline}. Doğum, hamile, yenidoğan ve bebek çekimlerinde samimi
+            {tagline}. Doğum, yenidoğan ve bebek çekimlerinde samimi
             anları ölümsüzleştiriyorum.
           </p>
         </div>

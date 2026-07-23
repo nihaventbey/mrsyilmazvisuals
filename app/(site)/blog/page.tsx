@@ -7,7 +7,7 @@ import { getBlogPosts } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Bebek, doğum, hamile ve düğün çekimleri üzerine ilham veren rehberler, ipuçları ve deneyimler.",
+    "Bebek, doğum, düğün ve etkinlik çekimleri üzerine ilham veren rehberler, ipuçları ve deneyimler.",
   alternates: { canonical: "/blog" },
 };
 

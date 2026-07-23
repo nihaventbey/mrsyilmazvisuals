@@ -158,7 +158,7 @@ export function Hero({
           className="relative z-10 mx-auto w-full max-w-3xl px-4 pb-[22vh] text-center sm:px-6 sm:pb-[30vh]"
         >
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-gold-dark sm:mb-5 sm:text-xs sm:tracking-[0.35em]">
-            Bebek · Doğum · Hamile · Düğün
+            Bebek · Doğum · Düğün · Etkinlik
           </p>
           <h1 className="break-words text-[1.85rem] leading-[1.12] text-espresso drop-shadow-[0_2px_18px_rgba(251,247,240,0.9)] min-[400px]:text-4xl sm:text-6xl lg:text-7xl">
             {tagline}

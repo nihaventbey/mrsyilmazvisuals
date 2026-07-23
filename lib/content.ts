@@ -20,7 +20,17 @@ export type PortfolioImage = {
 export type PortfolioCategory = {
   slug: string;
   title: string;
+  short: string;
   description: string;
+  parentSlug: string | null;
+  href: string;
+  children?: Array<{
+    slug: string;
+    title: string;
+    short: string;
+    description: string;
+    href: string;
+  }>;
   images: PortfolioImage[];
 };
 
@@ -50,37 +60,43 @@ function readingTimeOf(content: string): number {
 // ============================== portfolio ==============================
 
 export async function getPortfolioCategories(): Promise<PortfolioCategory[]> {
-  if (!isSupabaseConfigured()) return fallbackCategories();
-
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select(
-      "slug, title, description, sort_order, portfolio_images(id, caption, orientation, image_path, sort_order)",
-    )
-    .order("sort_order")
-    .order("sort_order", { referencedTable: "portfolio_images" });
-
-  if (error || !data) return fallbackCategories();
-
-  return data.map((category) => ({
+  const { getTopLevelCategories } = await import("@/lib/portfolio-categories");
+  const tops = await getTopLevelCategories();
+  return tops.map((category) => ({
     slug: category.slug,
     title: category.title,
+    short: category.short,
     description: category.description,
-    images: (category.portfolio_images ?? []).map((image) => ({
-      id: image.id,
-      caption: image.caption,
-      orientation: image.orientation as "portrait" | "landscape",
-      imageUrl: storagePublicUrl("portfolio", image.image_path),
-    })),
+    parentSlug: category.parentSlug,
+    href: category.href,
+    images: category.images,
   }));
 }
 
 export async function getPortfolioCategory(
   slug: string,
 ): Promise<PortfolioCategory | undefined> {
-  const categories = await getPortfolioCategories();
-  return categories.find((c) => c.slug === slug);
+  const {
+    getPortfolioCategoryBySlug,
+  } = await import("@/lib/portfolio-categories");
+  const category = await getPortfolioCategoryBySlug(slug);
+  if (!category) return undefined;
+  return {
+    slug: category.slug,
+    title: category.title,
+    short: category.short,
+    description: category.description,
+    parentSlug: category.parentSlug,
+    href: category.href,
+    images: category.images,
+    children: category.children.map((child) => ({
+      slug: child.slug,
+      title: child.title,
+      short: child.short,
+      description: child.description,
+      href: child.href,
+    })),
+  };
 }
 
 export async function getFeaturedImages(): Promise<
@@ -119,7 +135,10 @@ function fallbackCategories(): PortfolioCategory[] {
   return portfolioData.categories.map((category) => ({
     slug: category.slug,
     title: category.title,
+    short: category.title,
     description: category.description,
+    parentSlug: null,
+    href: `/portfolyo/${category.slug}`,
     images: category.images.map((image) => ({
       id: image.id,
       caption: image.caption,

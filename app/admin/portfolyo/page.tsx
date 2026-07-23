@@ -1,130 +1,92 @@
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { storagePublicUrl } from "@/lib/supabase/public";
-import {
-  deletePlaceholderImages,
-  deletePortfolioImage,
-  toggleFeatured,
-} from "@/app/admin/actions";
-import { PortfolioUploader } from "@/components/admin/PortfolioUploader";
-import { PortfolioImageEditForm } from "@/components/admin/PortfolioImageEditForm";
+import { PortfolioManager } from "@/components/admin/PortfolioManager";
 
 export default async function AdminPortfolioPage() {
   const supabase = await createClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select(
-      "id, slug, title, portfolio_images(id, caption, orientation, image_path, is_featured, sort_order)",
-    )
-    .order("sort_order")
-    .order("sort_order", { referencedTable: "portfolio_images" });
+  const [{ data: categories }, { data: images }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id, slug, title, parent_id, sort_order")
+      .order("sort_order"),
+    supabase
+      .from("portfolio_images")
+      .select(
+        "id, caption, orientation, image_path, is_featured, sort_order, category_id, categories(id, title, slug, parent_id)",
+      )
+      .order("sort_order"),
+  ]);
 
-  const categoryList = (categories ?? []).map((c) => ({
-    id: c.id,
-    slug: c.slug,
-    title: c.title,
-  }));
+  const rows = categories ?? [];
+  const byId = new Map(rows.map((c) => [c.id, c]));
+  const tops = rows.filter((c) => !c.parent_id);
+
+  const categoryOptions = tops.flatMap((top) => {
+    const children = rows
+      .filter((c) => c.parent_id === top.id)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    return [
+      {
+        id: top.id,
+        slug: top.slug,
+        title: top.title,
+        label: top.title,
+      },
+      ...children.map((child) => ({
+        id: child.id,
+        slug: child.slug,
+        title: child.title,
+        label: `${top.title} → ${child.title}`,
+      })),
+    ];
+  });
+
+  // orphans
+  for (const row of rows) {
+    if (categoryOptions.some((o) => o.id === row.id)) continue;
+    const parent = row.parent_id ? byId.get(row.parent_id) : null;
+    categoryOptions.push({
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      label: parent ? `${parent.title} → ${row.title}` : row.title,
+    });
+  }
+
+  const imageList = (images ?? []).map((image) => {
+    const cat = image.categories as unknown as {
+      id: string;
+      title: string;
+      slug: string;
+      parent_id: string | null;
+    } | null;
+    const parent = cat?.parent_id ? byId.get(cat.parent_id) : null;
+    const label = cat
+      ? parent
+        ? `${parent.title} → ${cat.title}`
+        : cat.title
+      : "Kategori yok";
+    return {
+      id: image.id,
+      caption: image.caption,
+      orientation: image.orientation,
+      image_path: image.image_path,
+      is_featured: image.is_featured,
+      sort_order: image.sort_order,
+      category_id: image.category_id,
+      category_title: cat?.title ?? "",
+      category_label: label,
+    };
+  });
 
   return (
     <div>
       <h1 className="font-serif text-3xl text-espresso">Portfolyo</h1>
       <p className="mt-2 text-sm text-mocha">
-        Çekimlerinizi bilgisayarınızdan yükleyin. Instagram entegrasyonu yok;
-        fotoğrafları doğrudan buradan ekleyin.
+        Görselleri yükleyin, filtreleyin, sayfalayın ve toplu işlem yapın.
       </p>
-
       <div className="mt-8">
-        <PortfolioUploader categories={categoryList} />
+        <PortfolioManager categories={categoryOptions} images={imageList} />
       </div>
-
-      <form action={deletePlaceholderImages} className="mt-4">
-        <button
-          type="submit"
-          className="text-sm text-red-700 underline-offset-4 hover:underline"
-        >
-          Görseli olmayan placeholder kayıtlarını sil
-        </button>
-      </form>
-
-      {(categories ?? []).map((category) => (
-        <section key={category.id} className="mt-10">
-          <h2 className="font-serif text-xl text-espresso">
-            {category.title}{" "}
-            <span className="text-sm text-mist">
-              ({category.portfolio_images.length} görsel)
-            </span>
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {category.portfolio_images.map((image) => {
-              const url = storagePublicUrl("portfolio", image.image_path);
-              const isPlaceholder = !image.image_path;
-              return (
-                <div
-                  key={image.id}
-                  className="rounded-xl border border-espresso/10 bg-white/50 p-3"
-                >
-                  <div className="relative aspect-square overflow-hidden rounded-lg bg-champagne">
-                    {url ? (
-                      <Image
-                        src={url}
-                        alt={image.caption}
-                        fill
-                        sizes="200px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-espresso/50">
-                        Görsel yok
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-2 truncate text-sm text-espresso">
-                    {image.caption}
-                    {isPlaceholder && (
-                      <span className="ml-1 text-xs text-mist">(placeholder)</span>
-                    )}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <form action={toggleFeatured}>
-                      <input type="hidden" name="id" value={image.id} />
-                      <input
-                        type="hidden"
-                        name="next"
-                        value={String(!image.is_featured)}
-                      />
-                      <button
-                        type="submit"
-                        className={
-                          image.is_featured
-                            ? "text-gold-dark"
-                            : "text-mist hover:text-gold-dark"
-                        }
-                      >
-                        {image.is_featured ? "★ Öne çıkan" : "☆ Öne çıkar"}
-                      </button>
-                    </form>
-                    <form action={deletePortfolioImage}>
-                      <input type="hidden" name="id" value={image.id} />
-                      <input
-                        type="hidden"
-                        name="image_path"
-                        value={image.image_path ?? ""}
-                      />
-                      <button
-                        type="submit"
-                        className="text-red-700 hover:text-red-900"
-                      >
-                        Sil
-                      </button>
-                    </form>
-                  </div>
-                  <PortfolioImageEditForm image={image} />
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
     </div>
   );
 }

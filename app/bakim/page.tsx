@@ -10,7 +10,7 @@ import {
 
 const PAGE_TITLE = "Çok Yakında | Mrs. Yılmaz Visuals";
 const PAGE_DESCRIPTION =
-  "Mrs. Yılmaz Visuals çok yakında açılıyor. Ankara Gölbaşı'ndaki ev stüdyomuzda yenidoğan, hamile, doğum ve gelin & damat fotoğraf çekimleri için ilk rezervasyon dönemimiz başlıyor.";
+  "Mrs. Yılmaz Visuals çok yakında açılıyor. Ankara Gölbaşı'ndaki ev stüdyomuzda yenidoğan, doğum ve gelin & damat fotoğraf çekimleri için ilk rezervasyon dönemimiz başlıyor.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();

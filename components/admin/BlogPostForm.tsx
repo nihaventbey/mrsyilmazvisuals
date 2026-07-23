@@ -160,7 +160,7 @@ export function BlogPostForm({ post, geminiConfigured = false }: Props) {
           <InputField
             label="Kategori"
             name="category"
-            placeholder="Bebek, Hamile, Düğün..."
+            placeholder="Bebek, Doğum, Düğün, Etkinlik..."
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />

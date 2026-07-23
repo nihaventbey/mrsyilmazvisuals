@@ -1,13 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { deleteBooking, updateBookingStatus } from "@/app/admin/actions";
 import { formatDate } from "@/lib/content";
-
-const typeLabels: Record<string, string> = {
-  bebek: "Bebek",
-  dogum: "Doğum",
-  hamile: "Hamile",
-  dugun: "Düğün",
-};
+import { getBookableCategories } from "@/lib/portfolio-categories";
 
 const statusLabels: Record<string, string> = {
   new: "Yeni",
@@ -18,12 +12,19 @@ const statusLabels: Record<string, string> = {
 
 export default async function AdminBookingsPage() {
   const supabase = await createClient();
-  const { data: bookings } = await supabase
-    .from("bookings")
-    .select(
-      "id, name, email, phone, shoot_type, preferred_date, location, notes, status, created_at",
-    )
-    .order("created_at", { ascending: false });
+  const [{ data: bookings }, bookable] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select(
+        "id, name, email, phone, shoot_type, preferred_date, location, notes, status, created_at",
+      )
+      .order("created_at", { ascending: false }),
+    getBookableCategories(),
+  ]);
+
+  const typeLabels = Object.fromEntries(
+    bookable.map((c) => [c.slug, c.title]),
+  );
 
   return (
     <div>

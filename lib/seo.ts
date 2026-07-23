@@ -94,11 +94,11 @@ export function buildOrganizationJsonLd(
         ? knowsAbout
         : [
             "Doğum fotoğrafçılığı",
-            "Hamile çekimi",
             "Yenidoğan fotoğrafçılığı",
             "Bebek fotoğrafçılığı",
             "Çocuk fotoğrafçılığı",
             "Düğün fotoğrafçılığı",
+            "Etkinlik fotoğrafçılığı",
             "Ankara Gölbaşı fotoğraf çekimi",
           ],
     sameAs,

@@ -254,6 +254,7 @@ export const getServices = cache(async (): Promise<Service[]> => {
     const { data, error } = await supabase
       .from("categories")
       .select("slug, title, short, description")
+      .is("parent_id", null)
       .order("sort_order");
 
     if (!error && data && data.length > 0) {
@@ -274,12 +275,6 @@ export const getServices = cache(async (): Promise<Service[]> => {
       description: defaultSettings.general.description,
     },
     {
-      slug: "hamile",
-      title: "Hamile Çekimleri",
-      short: "Bekleyişin zarafeti",
-      description: "Annelik yolculuğunuzun en özel dönemini samimi, rahat ve doğal pozlarla ölümsüzleştiriyorum.",
-    },
-    {
       slug: "bebek",
       title: "Bebek & Yenidoğan Çekimleri",
       short: "İlk günlerin masumiyeti",
@@ -290,6 +285,12 @@ export const getServices = cache(async (): Promise<Service[]> => {
       title: "Düğün Çekimleri",
       short: "Sonsuza dair bir söz",
       description: "Düğün gününüzün telaşını, coşkusunu ve zarafetini hikâye anlatan karelerle yakalıyorum.",
+    },
+    {
+      slug: "etkinlik",
+      title: "Etkinlik",
+      short: "Anların sahnesi",
+      description: "Konser, organizasyon ve özel etkinlik çekimlerinden seçilmiş kareler.",
     },
   ];
 });

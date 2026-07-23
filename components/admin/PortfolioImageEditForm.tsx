@@ -19,7 +19,17 @@ type Image = {
   sort_order: number;
 };
 
-export function PortfolioImageEditForm({ image }: { image: Image }) {
+type CategoryOption = { id: string; label: string };
+
+export function PortfolioImageEditForm({
+  image,
+  categories = [],
+  currentCategoryId,
+}: {
+  image: Image;
+  categories?: CategoryOption[];
+  currentCategoryId?: string;
+}) {
   const [state, setState] = useState<FormState>(initialFormState);
   const [file, setFile] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -81,6 +91,19 @@ export function PortfolioImageEditForm({ image }: { image: Image }) {
         defaultValue={image.caption}
         required
       />
+      {categories.length > 0 && (
+        <SelectField
+          label="Kategori"
+          name="category_id"
+          defaultValue={currentCategoryId ?? ""}
+        >
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </SelectField>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <SelectField
           label="Yön"
