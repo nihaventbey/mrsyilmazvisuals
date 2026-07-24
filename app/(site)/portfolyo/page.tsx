@@ -34,9 +34,9 @@ export default async function PortfolioPage() {
               className="group"
             >
               <div className="overflow-hidden rounded-2xl">
-                {category.images[0]?.imageUrl ? (
+                {category.coverImageUrl ? (
                   <PortfolioImage
-                    src={category.images[0].imageUrl}
+                    src={category.coverImageUrl}
                     alt={category.title}
                     className="aspect-[3/2] w-full transition-transform duration-500 group-hover:scale-[1.03]"
                   />

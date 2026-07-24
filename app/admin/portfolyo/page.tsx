@@ -84,7 +84,8 @@ export default async function AdminPortfolioPage() {
     <div>
       <h1 className="font-serif text-3xl text-espresso">Portfolyo</h1>
       <p className="mt-2 text-sm text-mocha">
-        Görselleri yükleyin, filtreleyin, sayfalayın ve toplu işlem yapın.
+        Görselleri yükleyin, filtreleyin ve sıralayın. ★ Kapak yap, kategori
+        kartını ve ana sayfa “öne çıkanlar” bölümünü belirler.
       </p>
       <div className="mt-8">
         <PortfolioManager categories={categoryOptions} images={imageList} />

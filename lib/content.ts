@@ -24,12 +24,14 @@ export type PortfolioCategory = {
   description: string;
   parentSlug: string | null;
   href: string;
+  coverImageUrl?: string | null;
   children?: Array<{
     slug: string;
     title: string;
     short: string;
     description: string;
     href: string;
+    coverImageUrl?: string | null;
   }>;
   images: PortfolioImage[];
 };
@@ -69,6 +71,7 @@ export async function getPortfolioCategories(): Promise<PortfolioCategory[]> {
     description: category.description,
     parentSlug: category.parentSlug,
     href: category.href,
+    coverImageUrl: category.coverImageUrl ?? category.images[0]?.imageUrl ?? null,
     images: category.images,
   }));
 }
@@ -88,6 +91,7 @@ export async function getPortfolioCategory(
     description: category.description,
     parentSlug: category.parentSlug,
     href: category.href,
+    coverImageUrl: category.coverImageUrl ?? category.images[0]?.imageUrl ?? null,
     images: category.images,
     children: category.children.map((child) => ({
       slug: child.slug,
@@ -95,6 +99,7 @@ export async function getPortfolioCategory(
       short: child.short,
       description: child.description,
       href: child.href,
+      coverImageUrl: child.coverImageUrl ?? null,
     })),
   };
 }

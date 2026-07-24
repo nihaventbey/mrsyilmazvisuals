@@ -25,11 +25,22 @@ export type PortfolioCategorySummary = {
   description: string;
   parentSlug: string | null;
   href: string;
+  coverImageUrl?: string | null;
 };
 
 export type PortfolioCategoryDetail = PortfolioCategorySummary & {
   images: PortfolioImage[];
   children: PortfolioCategorySummary[];
+};
+
+type RawPortfolioImage = {
+  id: string;
+  caption: string;
+  orientation: string;
+  image_path: string | null;
+  is_featured?: boolean;
+  sort_order?: number;
+  category_id?: string;
 };
 
 function hrefFor(slug: string, parentSlug: string | null): string {
@@ -38,18 +49,47 @@ function hrefFor(slug: string, parentSlug: string | null): string {
     : `/portfolyo/${slug}`;
 }
 
-function mapImage(image: {
-  id: string;
-  caption: string;
-  orientation: string;
-  image_path: string | null;
-}): PortfolioImage {
+function mapImage(image: RawPortfolioImage): PortfolioImage {
   return {
     id: image.id,
     caption: image.caption,
     orientation: image.orientation as "portrait" | "landscape",
     imageUrl: storagePublicUrl("portfolio", image.image_path),
   };
+}
+
+/** Prefer a featured image as category cover; fall back to first ordered image. */
+function pickCoverUrl(images: RawPortfolioImage[]): string | null {
+  const featured = images.find(
+    (image) => image.is_featured && storagePublicUrl("portfolio", image.image_path),
+  );
+  if (featured) return storagePublicUrl("portfolio", featured.image_path);
+
+  for (const image of images) {
+    const url = storagePublicUrl("portfolio", image.image_path);
+    if (url) return url;
+  }
+  return null;
+}
+
+/** Prefer featured across pools in order, then first available image. */
+function pickCoverFromPools(pools: RawPortfolioImage[][]): string | null {
+  for (const pool of pools) {
+    const featured = pool.find(
+      (image) =>
+        image.is_featured && storagePublicUrl("portfolio", image.image_path),
+    );
+    if (featured) return storagePublicUrl("portfolio", featured.image_path);
+  }
+  for (const pool of pools) {
+    const url = pickCoverUrl(pool);
+    if (url) return url;
+  }
+  return null;
+}
+
+function orderImagesForGallery(images: RawPortfolioImage[]): PortfolioImage[] {
+  return images.map(mapImage);
 }
 
 export const getCategoryRows = cache(async (): Promise<CategoryRow[]> => {
@@ -99,36 +139,53 @@ export async function getTopLevelCategories(): Promise<
   const supabase = createPublicClient();
   const { data: images } = await supabase
     .from("portfolio_images")
-    .select("id, caption, orientation, image_path, sort_order, category_id")
+    .select(
+      "id, caption, orientation, image_path, sort_order, category_id, is_featured, created_at",
+    )
     .order("sort_order")
     .order("created_at", { ascending: false })
     .order("id");
 
-  const imagesByCategory = new Map<string, PortfolioImage[]>();
+  const imagesByCategory = new Map<string, RawPortfolioImage[]>();
   for (const image of images ?? []) {
     const list = imagesByCategory.get(image.category_id) ?? [];
-    list.push(mapImage(image));
+    list.push(image as RawPortfolioImage);
     imagesByCategory.set(image.category_id, list);
   }
 
   return tops.map((top) => {
     const summary = bySlug.get(top.slug)!;
-    const childIds = rows.filter((r) => r.parent_id === top.id).map((r) => r.id);
+    const children = rows
+      .filter((r) => r.parent_id === top.id)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const childIds = children.map((r) => r.id);
     const own = imagesByCategory.get(top.id) ?? [];
-    // Cover: own images first, else first child image
-    let cover = own;
-    if (cover.length === 0) {
-      for (const childId of childIds) {
-        const childImages = imagesByCategory.get(childId) ?? [];
-        if (childImages.length) {
-          cover = childImages;
-          break;
-        }
-      }
-    }
+    const childPools = children.map(
+      (child) => imagesByCategory.get(child.id) ?? [],
+    );
+    const allPools = [own, ...childPools];
+    const coverUrl = pickCoverFromPools(allPools);
+    const flat = allPools.flat();
+    const coverRaw = coverUrl
+      ? flat.find(
+          (image) => storagePublicUrl("portfolio", image.image_path) === coverUrl,
+        )
+      : undefined;
+    const restPool =
+      own.length > 0
+        ? own
+        : (childPools.find((pool) => pool.length > 0) ?? []);
+    const rest = orderImagesForGallery(
+      restPool.filter((image) => image.id !== coverRaw?.id),
+    );
+    const images = coverRaw
+      ? [mapImage(coverRaw), ...rest]
+      : orderImagesForGallery(restPool);
+
     return {
       ...summary,
-      images: cover,
+      coverImageUrl: coverUrl,
+      images,
       childCount: childIds.length,
     };
   });
@@ -147,21 +204,47 @@ export async function getPortfolioCategoryBySlug(
 
   const summaries = buildSummaries(rows);
   const summary = summaries.find((s) => s.slug === slug)!;
-  const children = summaries.filter((s) => s.parentSlug === slug);
+  const childRows = rows
+    .filter((r) => r.parent_id === row.id)
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const childrenBase = summaries.filter((s) => s.parentSlug === slug);
 
   const supabase = createPublicClient();
+  const categoryIds = [row.id, ...childRows.map((r) => r.id)];
   const { data: images } = await supabase
     .from("portfolio_images")
-    .select("id, caption, orientation, image_path, sort_order")
-    .eq("category_id", row.id)
+    .select(
+      "id, caption, orientation, image_path, sort_order, category_id, is_featured, created_at",
+    )
+    .in("category_id", categoryIds)
     .order("sort_order")
     .order("created_at", { ascending: false })
     .order("id");
 
+  const imagesByCategory = new Map<string, RawPortfolioImage[]>();
+  for (const image of images ?? []) {
+    const list = imagesByCategory.get(image.category_id) ?? [];
+    list.push(image as RawPortfolioImage);
+    imagesByCategory.set(image.category_id, list);
+  }
+
+  const own = imagesByCategory.get(row.id) ?? [];
+  const children = childrenBase.map((child) => {
+    const childRow = childRows.find((r) => r.slug === child.slug);
+    const childImages = childRow
+      ? (imagesByCategory.get(childRow.id) ?? [])
+      : [];
+    return {
+      ...child,
+      coverImageUrl: pickCoverUrl(childImages),
+    };
+  });
+
   return {
     ...summary,
+    coverImageUrl: pickCoverUrl(own),
     children,
-    images: (images ?? []).map(mapImage),
+    images: orderImagesForGallery(own),
   };
 }
 

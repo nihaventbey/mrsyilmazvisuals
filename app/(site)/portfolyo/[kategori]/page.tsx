@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Placeholder } from "@/components/ui/Placeholder";
+import { PortfolioImage } from "@/components/portfolio/PortfolioImage";
 import { Button } from "@/components/ui/Button";
 import { Gallery } from "@/components/portfolio/Gallery";
 import { AdSlot } from "@/components/ads/AdSlot";
@@ -65,12 +66,20 @@ export default async function CategoryPage({
             {children.map((child, i) => (
               <Link key={child.slug} href={child.href} className="group">
                 <div className="overflow-hidden rounded-2xl">
-                  <Placeholder
-                    index={i}
-                    label={child.title}
-                    rounded={false}
-                    className="aspect-[4/3] w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
+                  {child.coverImageUrl ? (
+                    <PortfolioImage
+                      src={child.coverImageUrl}
+                      alt={child.title}
+                      className="aspect-[4/3] w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <Placeholder
+                      index={i}
+                      label={child.title}
+                      rounded={false}
+                      className="aspect-[4/3] w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  )}
                 </div>
                 <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-gold-dark">
                   {child.short}

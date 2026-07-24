@@ -277,7 +277,7 @@ export function PortfolioManager({
               runBulk(bulkSetFeatured, (fd) => fd.set("featured", "true"))
             }
           >
-            Öne çıkar
+            Öne çıkar / kapak
           </Button>
           <Button
             type="button"
@@ -393,7 +393,7 @@ export function PortfolioManager({
                         : "text-mist hover:text-gold-dark"
                     }
                   >
-                    {image.is_featured ? "★ Öne çıkan" : "☆ Öne çıkar"}
+                    {image.is_featured ? "★ Kapak / öne çıkan" : "☆ Kapak yap"}
                   </button>
                 </form>
                 <form action={deletePortfolioImage}>
