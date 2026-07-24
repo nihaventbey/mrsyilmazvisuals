@@ -16,10 +16,24 @@ function GalleryImage({
   image: PortfolioImage;
   index: number;
   className?: string;
-  fit?: "cover" | "contain";
+  fit?: "cover" | "contain" | "natural";
   sizes?: string;
 }) {
   if (image.imageUrl) {
+    if (fit === "natural") {
+      // Masonry thumbnail: keep the photo's intrinsic aspect ratio (no crop).
+      const portrait = image.orientation === "portrait";
+      return (
+        <Image
+          src={image.imageUrl}
+          alt={image.caption}
+          width={portrait ? 900 : 1200}
+          height={portrait ? 1200 : 900}
+          sizes={sizes}
+          className={cn("h-auto w-full", className)}
+        />
+      );
+    }
     return (
       <div className={cn("relative overflow-hidden", className)}>
         <Image
@@ -80,11 +94,13 @@ export function Gallery({ images }: { images: PortfolioImage[] }) {
             <GalleryImage
               image={image}
               index={i}
+              fit="natural"
               className={cn(
-                "w-full rounded-2xl transition-transform duration-500 group-hover:scale-[1.03]",
-                image.orientation === "portrait"
-                  ? "aspect-[3/4]"
-                  : "aspect-[4/3]",
+                "rounded-2xl transition-transform duration-500 group-hover:scale-[1.03]",
+                !image.imageUrl &&
+                  (image.orientation === "portrait"
+                    ? "aspect-[3/4] w-full"
+                    : "aspect-[4/3] w-full"),
               )}
             />
           </button>
