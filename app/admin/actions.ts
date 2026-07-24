@@ -1118,6 +1118,67 @@ export async function bulkSetFeatured(
   };
 }
 
+export async function reorderPortfolioImage(
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const id = String(formData.get("id") ?? "");
+  const direction = formData.get("direction") === "up" ? -1 : 1;
+
+  if (!id) {
+    return { status: "error", message: "Görsel bulunamadı." };
+  }
+
+  const { data: image } = await supabase
+    .from("portfolio_images")
+    .select("id, category_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!image) {
+    return { status: "error", message: "Görsel bulunamadı." };
+  }
+
+  const { data: rows } = await supabase
+    .from("portfolio_images")
+    .select("id, sort_order")
+    .eq("category_id", image.category_id)
+    .order("sort_order")
+    .order("created_at", { ascending: false })
+    .order("id");
+
+  const list = rows ?? [];
+  const index = list.findIndex((row) => row.id === id);
+  const target = index + direction;
+
+  if (index < 0 || target < 0 || target >= list.length) {
+    return { status: "success", message: "Görsel zaten sınırda." };
+  }
+
+  [list[index], list[target]] = [list[target], list[index]];
+
+  // Normalize sort_order to the new positions so duplicates/gaps disappear.
+  const updates = list
+    .map((row, position) => ({ row, position: position + 1 }))
+    .filter(({ row, position }) => row.sort_order !== position)
+    .map(({ row, position }) =>
+      supabase
+        .from("portfolio_images")
+        .update({ sort_order: position })
+        .eq("id", row.id),
+    );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((result) => result.error);
+  if (failed?.error) {
+    return { status: "error", message: `Taşınamadı: ${failed.error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/portfolyo");
+  return { status: "success" };
+}
+
 // ============================== giveaways ==============================
 
 function collectUsernames(formData: FormData, key: string): string[] {

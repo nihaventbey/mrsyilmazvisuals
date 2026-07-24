@@ -9,6 +9,7 @@ import {
   bulkSetFeatured,
   deletePlaceholderImages,
   deletePortfolioImage,
+  reorderPortfolioImage,
   toggleFeatured,
 } from "@/app/admin/actions";
 import { PortfolioUploader } from "@/components/admin/PortfolioUploader";
@@ -32,12 +33,33 @@ export type AdminPortfolioImage = {
   image_path: string | null;
   is_featured: boolean;
   sort_order: number;
+  created_at: string;
+  updated_at: string;
   category_id: string;
   category_title: string;
   category_label: string;
 };
 
 const PAGE_SIZE = 24;
+
+type SortMode = "updated" | "created" | "manual";
+
+const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
+  dateStyle: "short",
+  timeStyle: "short",
+});
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : dateFormatter.format(date);
+}
+
+function compareManual(a: AdminPortfolioImage, b: AdminPortfolioImage) {
+  if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+  if (a.created_at !== b.created_at)
+    return a.created_at < b.created_at ? 1 : -1;
+  return a.id < b.id ? -1 : 1;
+}
 
 export function PortfolioManager({
   categories,
@@ -52,19 +74,26 @@ export function PortfolioManager({
   const [categoryFilter, setCategoryFilter] = useState("");
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [query, setQuery] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("updated");
   const [page, setPage] = useState(1);
   const [moveTo, setMoveTo] = useState(categories[0]?.id ?? "");
   const [message, setMessage] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return images.filter((image) => {
+    const list = images.filter((image) => {
       if (categoryFilter && image.category_id !== categoryFilter) return false;
       if (featuredOnly && !image.is_featured) return false;
       if (q && !image.caption.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [images, categoryFilter, featuredOnly, query]);
+    return list.sort((a, b) => {
+      if (sortMode === "manual") return compareManual(a, b);
+      const key = sortMode === "created" ? "created_at" : "updated_at";
+      if (a[key] !== b[key]) return a[key] < b[key] ? 1 : -1;
+      return compareManual(a, b);
+    });
+  }, [images, categoryFilter, featuredOnly, query, sortMode]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -91,6 +120,17 @@ export function PortfolioManager({
         else next.add(img.id);
       }
       return next;
+    });
+  }
+
+  function moveImage(id: string, direction: "up" | "down") {
+    const fd = new FormData();
+    fd.set("id", id);
+    fd.set("direction", direction);
+    startTransition(async () => {
+      const result = await reorderPortfolioImage(fd);
+      setMessage(result.message ?? null);
+      if (result.status === "success") router.refresh();
     });
   }
 
@@ -135,7 +175,7 @@ export function PortfolioManager({
       </form>
 
       <div className="rounded-2xl border border-espresso/10 bg-white/50 p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <SelectField
             label="Kategori"
             name="filter_category"
@@ -151,6 +191,19 @@ export function PortfolioManager({
                 {c.label}
               </option>
             ))}
+          </SelectField>
+          <SelectField
+            label="Sıralama"
+            name="sort_mode"
+            value={sortMode}
+            onChange={(e) => {
+              setSortMode(e.target.value as SortMode);
+              setPage(1);
+            }}
+          >
+            <option value="updated">Son işlem (yeni → eski)</option>
+            <option value="created">Eklenme tarihi (yeni → eski)</option>
+            <option value="manual">Manuel sıra (sitedeki sıra)</option>
           </SelectField>
           <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-espresso">Ara (başlık)</span>
@@ -298,6 +351,32 @@ export function PortfolioManager({
                 {image.caption}
               </p>
               <p className="truncate text-xs text-mist">{image.category_label}</p>
+              <p className="text-[11px] text-mist">
+                Son işlem: {formatDate(image.updated_at)}
+              </p>
+              {sortMode === "manual" && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-mocha">
+                  <span>Sıra: {image.sort_order}</span>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => moveImage(image.id, "up")}
+                    className="rounded-md border border-espresso/20 px-2 py-0.5 hover:border-gold/60 disabled:opacity-50"
+                    aria-label="Öne taşı"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => moveImage(image.id, "down")}
+                    className="rounded-md border border-espresso/20 px-2 py-0.5 hover:border-gold/60 disabled:opacity-50"
+                    aria-label="Arkaya taşı"
+                  >
+                    ↓
+                  </button>
+                </div>
+              )}
               <div className="mt-2 flex items-center justify-between text-xs">
                 <form action={toggleFeatured}>
                   <input type="hidden" name="id" value={image.id} />

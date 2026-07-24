@@ -109,6 +109,8 @@ export async function getFeaturedImages(): Promise<
       .select("id, caption, orientation, image_path, categories(slug)")
       .eq("is_featured", true)
       .order("sort_order")
+      .order("created_at", { ascending: false })
+      .order("id")
       .limit(8);
 
     if (!error && data && data.length > 0) {

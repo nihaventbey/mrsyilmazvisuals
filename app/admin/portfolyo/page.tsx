@@ -11,9 +11,9 @@ export default async function AdminPortfolioPage() {
     supabase
       .from("portfolio_images")
       .select(
-        "id, caption, orientation, image_path, is_featured, sort_order, category_id, categories(id, title, slug, parent_id)",
+        "id, caption, orientation, image_path, is_featured, sort_order, category_id, created_at, updated_at, categories(id, title, slug, parent_id)",
       )
-      .order("sort_order"),
+      .order("updated_at", { ascending: false }),
   ]);
 
   const rows = categories ?? [];
@@ -72,6 +72,8 @@ export default async function AdminPortfolioPage() {
       image_path: image.image_path,
       is_featured: image.is_featured,
       sort_order: image.sort_order,
+      created_at: image.created_at,
+      updated_at: image.updated_at,
       category_id: image.category_id,
       category_title: cat?.title ?? "",
       category_label: label,

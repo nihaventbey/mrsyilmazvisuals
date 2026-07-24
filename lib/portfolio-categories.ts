@@ -100,7 +100,9 @@ export async function getTopLevelCategories(): Promise<
   const { data: images } = await supabase
     .from("portfolio_images")
     .select("id, caption, orientation, image_path, sort_order, category_id")
-    .order("sort_order");
+    .order("sort_order")
+    .order("created_at", { ascending: false })
+    .order("id");
 
   const imagesByCategory = new Map<string, PortfolioImage[]>();
   for (const image of images ?? []) {
@@ -152,7 +154,9 @@ export async function getPortfolioCategoryBySlug(
     .from("portfolio_images")
     .select("id, caption, orientation, image_path, sort_order")
     .eq("category_id", row.id)
-    .order("sort_order");
+    .order("sort_order")
+    .order("created_at", { ascending: false })
+    .order("id");
 
   return {
     ...summary,
