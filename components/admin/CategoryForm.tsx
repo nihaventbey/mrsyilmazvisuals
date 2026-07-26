@@ -30,13 +30,13 @@ export function CreateCategoryForm({
   parents: ParentOption[];
 }) {
   return (
-    <ActionForm action={createCategory} submitLabel="Kategori Oluştur">
+    <ActionForm action={createCategory} submitLabel="Klasör Oluştur">
       <div className="grid gap-4 sm:grid-cols-2">
         <InputField label="Başlık" name="title" required />
         <InputField
           label="Slug"
           name="slug"
-          placeholder="ornek-kategori"
+          placeholder="ornek-klasor"
           required
         />
       </div>
@@ -49,7 +49,7 @@ export function CreateCategoryForm({
           defaultValue="0"
         />
       </div>
-      <SelectField label="Üst kategori" name="parent_id" defaultValue="">
+      <SelectField label="Üst klasör" name="parent_id" defaultValue="">
         <option value="">— Yok (üst seviye) —</option>
         {parents.map((p) => (
           <option key={p.id} value={p.id}>
@@ -77,7 +77,7 @@ export function CategoryForm({
 
   return (
     <div className="space-y-4">
-      <ActionForm action={updateCategory} submitLabel="Kategoriyi Kaydet">
+      <ActionForm action={updateCategory} submitLabel="Klasörü Kaydet">
         <input type="hidden" name="id" value={category.id} />
         <p className="text-xs uppercase tracking-wider text-mist">
           Slug: {category.slug}
@@ -96,7 +96,7 @@ export function CategoryForm({
           />
         </div>
         <SelectField
-          label="Üst kategori"
+          label="Üst klasör"
           name="parent_id"
           defaultValue={category.parent_id ?? ""}
         >
@@ -135,14 +135,14 @@ export function CategoryForm({
           onClick={(e) => {
             if (
               !window.confirm(
-                `"${category.title}" kategorisini silmek istediğinize emin misiniz? Alt kategoriler ve görseller de silinir.`,
+                `"${category.title}" klasörünü silmek istediğinize emin misiniz? Alt klasörler ve görseller de silinir.`,
               )
             ) {
               e.preventDefault();
             }
           }}
         >
-          {deletePending ? "Siliniyor..." : "Kategoriyi Sil"}
+          {deletePending ? "Siliniyor..." : "Klasörü Sil"}
         </Button>
       </form>
     </div>

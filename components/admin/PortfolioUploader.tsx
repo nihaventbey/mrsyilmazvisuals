@@ -240,7 +240,7 @@ export function PortfolioUploader({ categories }: { categories: Category[] }) {
             checked={isFeatured}
             onChange={(e) => setIsFeatured(e.target.checked)}
           />
-          Tümünü kategori kapağı / ana sayfada öne çıkar
+          Tümünü ana sayfada öne çıkar
         </label>
       </div>
 

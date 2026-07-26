@@ -15,6 +15,7 @@ export type CategoryRow = {
   description: string;
   sort_order: number;
   parent_id: string | null;
+  cover_image_id: string | null;
 };
 
 export type PortfolioCategorySummary = {
@@ -58,31 +59,51 @@ function mapImage(image: RawPortfolioImage): PortfolioImage {
   };
 }
 
-/** Prefer a featured image as category cover; fall back to first ordered image. */
-function pickCoverUrl(images: RawPortfolioImage[]): string | null {
+function imageUrl(image: RawPortfolioImage | undefined): string | null {
+  if (!image) return null;
+  return storagePublicUrl("portfolio", image.image_path);
+}
+
+/** Explicit cover_image_id first; else featured; else first image with a URL. */
+function pickCoverUrl(
+  images: RawPortfolioImage[],
+  coverImageId: string | null | undefined,
+): string | null {
+  if (coverImageId) {
+    const explicit = images.find((image) => image.id === coverImageId);
+    const url = imageUrl(explicit);
+    if (url) return url;
+  }
+
   const featured = images.find(
-    (image) => image.is_featured && storagePublicUrl("portfolio", image.image_path),
+    (image) => image.is_featured && imageUrl(image),
   );
-  if (featured) return storagePublicUrl("portfolio", featured.image_path);
+  if (featured) return imageUrl(featured);
 
   for (const image of images) {
-    const url = storagePublicUrl("portfolio", image.image_path);
+    const url = imageUrl(image);
     if (url) return url;
   }
   return null;
 }
 
-/** Prefer featured across pools in order, then first available image. */
-function pickCoverFromPools(pools: RawPortfolioImage[][]): string | null {
-  for (const pool of pools) {
-    const featured = pool.find(
-      (image) =>
-        image.is_featured && storagePublicUrl("portfolio", image.image_path),
-    );
-    if (featured) return storagePublicUrl("portfolio", featured.image_path);
-  }
-  for (const pool of pools) {
-    const url = pickCoverUrl(pool);
+/**
+ * Parent folder cover: own explicit cover, else own fallback, else first child
+ * with an explicit/fallback cover (child sort order).
+ */
+function pickFolderCoverUrl(
+  own: RawPortfolioImage[],
+  ownCoverId: string | null | undefined,
+  childPools: Array<{
+    images: RawPortfolioImage[];
+    coverId: string | null | undefined;
+  }>,
+): string | null {
+  const ownCover = pickCoverUrl(own, ownCoverId);
+  if (ownCover) return ownCover;
+
+  for (const child of childPools) {
+    const url = pickCoverUrl(child.images, child.coverId);
     if (url) return url;
   }
   return null;
@@ -98,7 +119,9 @@ export const getCategoryRows = cache(async (): Promise<CategoryRow[]> => {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, slug, title, short, description, sort_order, parent_id")
+    .select(
+      "id, slug, title, short, description, sort_order, parent_id, cover_image_id",
+    )
     .order("sort_order");
 
   if (error || !data) return [];
@@ -160,32 +183,30 @@ export async function getTopLevelCategories(): Promise<
       .sort((a, b) => a.sort_order - b.sort_order);
     const childIds = children.map((r) => r.id);
     const own = imagesByCategory.get(top.id) ?? [];
-    const childPools = children.map(
-      (child) => imagesByCategory.get(child.id) ?? [],
-    );
-    const allPools = [own, ...childPools];
-    const coverUrl = pickCoverFromPools(allPools);
-    const flat = allPools.flat();
+    const childPools = children.map((child) => ({
+      images: imagesByCategory.get(child.id) ?? [],
+      coverId: child.cover_image_id,
+    }));
+    const coverUrl = pickFolderCoverUrl(own, top.cover_image_id, childPools);
+    const flat = [own, ...childPools.map((p) => p.images)].flat();
     const coverRaw = coverUrl
-      ? flat.find(
-          (image) => storagePublicUrl("portfolio", image.image_path) === coverUrl,
-        )
+      ? flat.find((image) => imageUrl(image) === coverUrl)
       : undefined;
     const restPool =
       own.length > 0
         ? own
-        : (childPools.find((pool) => pool.length > 0) ?? []);
+        : (childPools.find((pool) => pool.images.length > 0)?.images ?? []);
     const rest = orderImagesForGallery(
       restPool.filter((image) => image.id !== coverRaw?.id),
     );
-    const images = coverRaw
+    const gallery = coverRaw
       ? [mapImage(coverRaw), ...rest]
       : orderImagesForGallery(restPool);
 
     return {
       ...summary,
       coverImageUrl: coverUrl,
-      images,
+      images: gallery,
       childCount: childIds.length,
     };
   });
@@ -236,13 +257,18 @@ export async function getPortfolioCategoryBySlug(
       : [];
     return {
       ...child,
-      coverImageUrl: pickCoverUrl(childImages),
+      coverImageUrl: pickCoverUrl(childImages, childRow?.cover_image_id),
     };
   });
 
+  const childPools = childRows.map((child) => ({
+    images: imagesByCategory.get(child.id) ?? [],
+    coverId: child.cover_image_id,
+  }));
+
   return {
     ...summary,
-    coverImageUrl: pickCoverUrl(own),
+    coverImageUrl: pickFolderCoverUrl(own, row.cover_image_id, childPools),
     children,
     images: orderImagesForGallery(own),
   };
@@ -335,7 +361,6 @@ export async function getCategoryOptionsForAdmin(): Promise<
     }
   }
 
-  // Orphans (parent missing) — still list
   for (const row of rows) {
     if (options.some((o) => o.id === row.id)) continue;
     const parent = row.parent_id ? byId.get(row.parent_id) : null;

@@ -64,20 +64,24 @@ function compareManual(a: AdminPortfolioImage, b: AdminPortfolioImage) {
 export function PortfolioManager({
   categories,
   images,
+  initialCategoryId = "",
 }: {
   categories: AdminCategoryOption[];
   images: AdminPortfolioImage[];
+  initialCategoryId?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(initialCategoryId);
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("updated");
   const [page, setPage] = useState(1);
   const [moveTo, setMoveTo] = useState(categories[0]?.id ?? "");
   const [message, setMessage] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -157,13 +161,31 @@ export function PortfolioManager({
 
   return (
     <div className="space-y-8">
-      <PortfolioUploader
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          href="/admin/kategoriler"
+        >
+          Klasörlere git
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setShowUploader((v) => !v)}
+        >
+          {showUploader ? "Yüklemeyi kapat" : "Görsel yükle"}
+        </Button>
+      </div>
+
+      {showUploader && <PortfolioUploader
         categories={categories.map((c) => ({
           id: c.id,
           slug: c.slug,
           title: c.label,
         }))}
-      />
+      />}
 
       <form action={deletePlaceholderImages}>
         <button
@@ -177,7 +199,7 @@ export function PortfolioManager({
       <div className="rounded-2xl border border-espresso/10 bg-white/50 p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <SelectField
-            label="Kategori"
+            label="Klasör"
             name="filter_category"
             value={categoryFilter}
             onChange={(e) => {
@@ -226,7 +248,7 @@ export function PortfolioManager({
                 setPage(1);
               }}
             />
-            Yalnızca öne çıkanlar
+            Yalnızca ana sayfa
           </label>
           <div className="flex items-end text-sm text-mocha">
             {filtered.length} görsel · sayfa {currentPage}/{totalPages}
@@ -277,7 +299,7 @@ export function PortfolioManager({
               runBulk(bulkSetFeatured, (fd) => fd.set("featured", "true"))
             }
           >
-            Öne çıkar / kapak
+            Öne çıkar (ana sayfa)
           </Button>
           <Button
             type="button"
@@ -288,7 +310,7 @@ export function PortfolioManager({
               runBulk(bulkSetFeatured, (fd) => fd.set("featured", "false"))
             }
           >
-            Öne çıkarmayı kaldır
+            Ana sayfadan kaldır
           </Button>
           <Button
             type="button"
@@ -393,29 +415,46 @@ export function PortfolioManager({
                         : "text-mist hover:text-gold-dark"
                     }
                   >
-                    {image.is_featured ? "★ Kapak / öne çıkan" : "☆ Kapak yap"}
+                    {image.is_featured
+                      ? "★ Ana sayfa"
+                      : "☆ Ana sayfaya ekle"}
                   </button>
                 </form>
-                <form action={deletePortfolioImage}>
-                  <input type="hidden" name="id" value={image.id} />
-                  <input
-                    type="hidden"
-                    name="image_path"
-                    value={image.image_path ?? ""}
-                  />
+                <div className="flex items-center gap-2">
                   <button
-                    type="submit"
-                    className="text-red-700 hover:text-red-900"
+                    type="button"
+                    onClick={() =>
+                      setEditingId((id) =>
+                        id === image.id ? null : image.id,
+                      )
+                    }
+                    className="text-mocha hover:text-espresso"
                   >
-                    Sil
+                    {editingId === image.id ? "Kapat" : "Düzenle"}
                   </button>
-                </form>
+                  <form action={deletePortfolioImage}>
+                    <input type="hidden" name="id" value={image.id} />
+                    <input
+                      type="hidden"
+                      name="image_path"
+                      value={image.image_path ?? ""}
+                    />
+                    <button
+                      type="submit"
+                      className="text-red-700 hover:text-red-900"
+                    >
+                      Sil
+                    </button>
+                  </form>
+                </div>
               </div>
-              <PortfolioImageEditForm
-                image={image}
-                categories={categories}
-                currentCategoryId={image.category_id}
-              />
+              {editingId === image.id && (
+                <PortfolioImageEditForm
+                  image={image}
+                  categories={categories}
+                  currentCategoryId={image.category_id}
+                />
+              )}
             </div>
           );
         })}

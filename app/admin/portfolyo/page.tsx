@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioManager } from "@/components/admin/PortfolioManager";
 
-export default async function AdminPortfolioPage() {
+export default async function AdminPortfolioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category: initialCategoryId = "" } = await searchParams;
   const supabase = await createClient();
   const [{ data: categories }, { data: images }] = await Promise.all([
     supabase
@@ -40,7 +45,6 @@ export default async function AdminPortfolioPage() {
     ];
   });
 
-  // orphans
   for (const row of rows) {
     if (categoryOptions.some((o) => o.id === row.id)) continue;
     const parent = row.parent_id ? byId.get(row.parent_id) : null;
@@ -64,7 +68,7 @@ export default async function AdminPortfolioPage() {
       ? parent
         ? `${parent.title} → ${cat.title}`
         : cat.title
-      : "Kategori yok";
+      : "Klasör yok";
     return {
       id: image.id,
       caption: image.caption,
@@ -82,13 +86,27 @@ export default async function AdminPortfolioPage() {
 
   return (
     <div>
-      <h1 className="font-serif text-3xl text-espresso">Portfolyo</h1>
+      <h1 className="font-serif text-3xl text-espresso">Portfolyo Görselleri</h1>
       <p className="mt-2 text-sm text-mocha">
-        Görselleri yükleyin, filtreleyin ve sıralayın. ★ Kapak yap, kategori
-        kartını ve ana sayfa “öne çıkanlar” bölümünü belirler.
+        Fotoğrafları yükleyin ve yönetin. Klasör kapakları{" "}
+        <a
+          href="/admin/kategoriler"
+          className="underline underline-offset-2 hover:text-espresso"
+        >
+          Portfolyo Klasörleri
+        </a>{" "}
+        sayfasından seçilir; ★ yalnızca ana sayfa “öne çıkanlar” içindir.
       </p>
       <div className="mt-8">
-        <PortfolioManager categories={categoryOptions} images={imageList} />
+        <PortfolioManager
+          categories={categoryOptions}
+          images={imageList}
+          initialCategoryId={
+            categoryOptions.some((c) => c.id === initialCategoryId)
+              ? initialCategoryId
+              : ""
+          }
+        />
       </div>
     </div>
   );

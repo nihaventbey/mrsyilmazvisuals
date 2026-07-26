@@ -1022,6 +1022,73 @@ export async function deleteCategory(formData: FormData): Promise<FormState> {
   return { status: "success", message: "Kategori silindi." };
 }
 
+export async function setCategoryCover(
+  formData: FormData,
+): Promise<FormState> {
+  const supabase = await authedClient();
+  const categoryId = String(formData.get("category_id") ?? "");
+  const imageIdRaw = String(formData.get("image_id") ?? "").trim();
+  const imageId = imageIdRaw || null;
+
+  if (!categoryId) {
+    return { status: "error", message: "Klasör bulunamadı." };
+  }
+
+  if (imageId) {
+    const { data: image } = await supabase
+      .from("portfolio_images")
+      .select("id, category_id")
+      .eq("id", imageId)
+      .maybeSingle();
+    if (!image) {
+      return { status: "error", message: "Görsel bulunamadı." };
+    }
+
+    // Cover may come from this folder or one of its direct children.
+    const { data: category } = await supabase
+      .from("categories")
+      .select("id, parent_id")
+      .eq("id", categoryId)
+      .maybeSingle();
+    if (!category) {
+      return { status: "error", message: "Klasör bulunamadı." };
+    }
+
+    const allowedIds = new Set<string>([categoryId]);
+    if (!category.parent_id) {
+      const { data: children } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("parent_id", categoryId);
+      for (const child of children ?? []) allowedIds.add(child.id);
+    }
+
+    if (!allowedIds.has(image.category_id)) {
+      return {
+        status: "error",
+        message: "Kapak yalnızca bu klasör veya alt klasörlerindeki görsellerden seçilebilir.",
+      };
+    }
+  }
+
+  const { error } = await supabase
+    .from("categories")
+    .update({ cover_image_id: imageId })
+    .eq("id", categoryId);
+
+  if (error) {
+    return { status: "error", message: `Kapak kaydedilemedi: ${error.message}` };
+  }
+
+  revalidateSite();
+  revalidatePath("/admin/kategoriler");
+  revalidatePath("/admin/portfolyo");
+  return {
+    status: "success",
+    message: imageId ? "Klasör kapağı güncellendi." : "Klasör kapağı kaldırıldı.",
+  };
+}
+
 export async function bulkDeletePortfolioImages(
   formData: FormData,
 ): Promise<FormState> {
