@@ -81,6 +81,8 @@ export type SiteConfig = {
   whatsappPhone: string;
   whatsappUrl: string | null;
   workingHours: string;
+  instagramHandle: string;
+  instagramUrl: string;
 };
 
 export type ContactChannel = {
@@ -194,6 +196,8 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
     whatsappPhone: settings.contact.whatsappPhone,
     whatsappUrl: toWhatsAppUrl(settings.contact.whatsappPhone),
     workingHours: settings.contact.workingHours,
+    instagramHandle: settings.contact.instagramHandle,
+    instagramUrl: settings.contact.instagramUrl,
   };
 });
 

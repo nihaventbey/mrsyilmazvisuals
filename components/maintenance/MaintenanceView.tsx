@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { MaintenanceSettings } from "@/lib/maintenance";
 import type { SiteConfig } from "@/lib/settings";
-import { toWhatsAppUrl } from "@/lib/whatsapp";
+import { formatWhatsAppDisplay, toWhatsAppUrl } from "@/lib/whatsapp";
 
 type Props = {
   maintenance: MaintenanceSettings;
@@ -90,19 +90,26 @@ function buildContactCards(
 ): ContactCard[] {
   const whatsappHref =
     config.whatsappUrl ?? toWhatsAppUrl(config.whatsappPhone) ?? undefined;
+  const whatsappDisplay =
+    formatWhatsAppDisplay(config.whatsappPhone) || config.whatsappPhone || "+90 544 975 83 38";
   const email = contactEmail?.trim() || "merhaba@mrsyilmaz.com";
+  const instagramHandle = config.instagramHandle || "@mrs.yilmaz.visuals";
+  const instagramUrl =
+    config.instagramUrl || "https://www.instagram.com/mrs.yilmaz.visuals/";
+  const location = config.location || "Gölbaşı / Ankara";
+  const workingHours = config.workingHours || "Randevu Sistemi";
 
   return [
     {
       label: "Instagram",
-      value: "@ankara.yenidogan.fotograf",
+      value: instagramHandle,
       subtitle: "Yeni çalışmalarımızı ve duyurularımızı takip edin.",
-      href: "https://www.instagram.com/ankara.yenidogan.fotograf/",
+      href: instagramUrl,
       icon: "instagram",
     },
     {
       label: "WhatsApp",
-      value: "+90 544 975 83 38",
+      value: whatsappDisplay,
       subtitle:
         "Bilgi almak veya ön rezervasyon oluşturmak için bize yazabilirsiniz.",
       href: whatsappHref,
@@ -110,13 +117,14 @@ function buildContactCards(
     },
     {
       label: "Konum",
-      value: "Gölbaşı / Ankara",
+      value: location,
       subtitle: "Ev stüdyomuz randevu sistemiyle hizmet vermektedir.",
+      href: config.mapsUrl || undefined,
       icon: "location",
     },
     {
       label: "Çalışma Şekli",
-      value: "Randevu Sistemi",
+      value: workingHours,
       subtitle:
         "Tüm çekimler önceden planlanan rezervasyon sistemiyle gerçekleştirilmektedir.",
       icon: "hours",
@@ -142,7 +150,7 @@ export function MaintenanceView({
   const instagramHref = contactItems.find((c) => c.label === "Instagram")?.href;
 
   return (
-    <div className="maintenance-scene relative flex min-h-full flex-col overflow-hidden">
+    <div className="maintenance-scene relative flex min-h-screen min-h-dvh flex-col overflow-x-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,#f4e8d3_0%,#fbf7f0_45%,#f6efe2_100%)]" />
         <div className="maintenance-orb absolute -left-24 top-20 h-72 w-72 rounded-full bg-champagne/50 blur-3xl" />
@@ -166,16 +174,16 @@ export function MaintenanceView({
         <span className="maintenance-wa-guide-ring maintenance-wa-guide-ring-delay absolute inset-2 rounded-full border border-gold/15" />
       </div>
 
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 py-8 sm:px-8 sm:py-10 lg:py-8">
-        <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[2rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl lg:max-w-6xl">
-          <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-8 pb-6 pt-8 text-center sm:px-12 sm:pb-8 sm:pt-10 lg:px-14 lg:pb-7 lg:pt-9">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-3.5 py-6 sm:px-8 sm:py-10 lg:py-8">
+        <div className="maintenance-card w-full max-w-2xl overflow-hidden rounded-[1.75rem] border border-espresso/10 bg-white/55 shadow-[0_32px_80px_-24px_rgba(59,46,38,0.18)] backdrop-blur-xl sm:rounded-[2rem] lg:max-w-6xl">
+          <header className="border-b border-espresso/8 bg-gradient-to-b from-white/70 to-transparent px-5 pb-5 pt-6 text-center sm:px-12 sm:pb-8 sm:pt-10 lg:px-14 lg:pb-7 lg:pt-9">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={config.logoIcon}
               alt={config.name}
-              className="mx-auto h-[4.8rem] w-[4.8rem] object-contain sm:h-24 sm:w-24"
+              className="mx-auto h-16 w-16 object-contain sm:h-24 sm:w-24"
             />
-            <p className="mt-4 text-[11px] leading-relaxed tracking-[0.28em] text-gold-dark uppercase sm:mt-5 sm:text-xs sm:tracking-[0.32em]">
+            <p className="mt-3.5 text-[10px] leading-relaxed tracking-[0.16em] text-gold-dark uppercase sm:mt-5 sm:text-xs sm:tracking-[0.32em]">
               {SLOGAN}
             </p>
           </header>
@@ -183,11 +191,11 @@ export function MaintenanceView({
           <div className="lg:grid lg:grid-cols-12 lg:items-stretch">
             <div className="lg:col-span-7 lg:border-r lg:border-espresso/8">
               <section
-                className="px-8 py-8 text-center sm:px-12 sm:py-10 lg:px-14 lg:py-10 lg:text-left"
+                className="px-5 py-6 text-center sm:px-12 sm:py-10 lg:px-14 lg:py-10 lg:text-left"
                 aria-labelledby="coming-soon-title"
               >
                 <div
-                  className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/35 bg-champagne/45 px-4 py-1.5 text-xs font-medium tracking-[0.2em] text-gold-dark uppercase lg:mx-0"
+                  className="maintenance-badge mx-auto inline-flex items-center gap-2 rounded-full border border-gold/35 bg-champagne/45 px-3.5 py-1 text-[11px] font-medium tracking-[0.16em] text-gold-dark uppercase sm:px-4 sm:py-1.5 sm:text-xs sm:tracking-[0.2em] lg:mx-0"
                   role="status"
                   aria-label="Çok yakında açılıyoruz"
                 >
@@ -197,19 +205,19 @@ export function MaintenanceView({
 
                 <h1
                   id="coming-soon-title"
-                  className="mt-6 font-serif text-3xl leading-tight text-espresso sm:mt-7 sm:text-4xl lg:text-[2.75rem]"
+                  className="mt-4 font-serif text-2xl leading-tight text-espresso sm:mt-7 sm:text-4xl lg:text-[2.75rem]"
                 >
                   {TITLE}
                 </h1>
 
-                <div className="mx-auto mt-5 max-w-xl space-y-3 text-base leading-relaxed text-mocha sm:mt-6 sm:space-y-3.5 sm:text-lg lg:mx-0">
+                <div className="mx-auto mt-4 max-w-xl space-y-2.5 text-sm leading-relaxed text-mocha sm:mt-6 sm:space-y-3.5 sm:text-lg lg:mx-0">
                   {DESCRIPTION_PARAGRAPHS.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
                 </div>
 
                 <div
-                  className="mt-8 flex justify-center gap-1.5 lg:justify-start"
+                  className="mt-6 flex justify-center gap-1.5 sm:mt-8 lg:justify-start"
                   aria-hidden
                 >
                   {[0, 1, 2].map((i) => (
@@ -223,20 +231,20 @@ export function MaintenanceView({
               </section>
 
               <section
-                className="border-t border-espresso/8 px-8 py-7 text-center sm:px-12 sm:py-8 lg:px-14 lg:py-8 lg:text-left"
+                className="border-t border-espresso/8 px-5 py-6 text-center sm:px-12 sm:py-8 lg:px-14 lg:py-8 lg:text-left"
                 aria-labelledby="pre-reservation-title"
               >
                 <h2
                   id="pre-reservation-title"
-                  className="font-serif text-xl leading-snug text-espresso sm:text-2xl"
+                  className="font-serif text-lg leading-snug text-espresso sm:text-2xl"
                 >
                   İlk Rezervasyon Dönemimiz Açılıyor
                 </h2>
-                <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-mocha sm:mt-4 sm:text-base lg:mx-0">
+                <p className="mx-auto mt-2.5 max-w-xl text-xs leading-relaxed text-mocha sm:mt-4 sm:text-base lg:mx-0">
                   İlk çekim takvimimiz oluşturulurken sınırlı sayıda rezervasyon
                   kabul edeceğiz.
                 </p>
-                <p className="mx-auto mt-2.5 max-w-xl text-sm leading-relaxed text-mocha sm:text-base lg:mx-0">
+                <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-mocha sm:mt-2.5 sm:text-base lg:mx-0">
                   Bilgi almak veya yerinizi erkenden planlamak isterseniz sağ alt
                   köşedeki WhatsApp butonunu kullanarak bizimle iletişime
                   geçebilirsiniz.
@@ -245,7 +253,7 @@ export function MaintenanceView({
             </div>
 
             <section
-              className="border-t border-espresso/8 bg-sand/25 px-8 py-7 sm:px-12 sm:py-8 lg:col-span-5 lg:border-t-0 lg:px-8 lg:py-10 xl:px-10"
+              className="border-t border-espresso/8 bg-sand/25 px-5 py-6 sm:px-12 sm:py-8 lg:col-span-5 lg:border-t-0 lg:px-8 lg:py-10 xl:px-10"
               aria-labelledby="contact-section-title"
             >
               <h2
@@ -254,13 +262,13 @@ export function MaintenanceView({
               >
                 Bize Ulaşın
               </h2>
-              <ul className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 lg:grid-cols-1 lg:gap-3.5">
+              <ul className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 lg:grid-cols-1 lg:gap-3.5">
                 {contactItems.map((item) => (
                   <li key={item.label}>
-                    <div className="maintenance-contact-card group flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-3.5 sm:p-4">
+                    <div className="maintenance-contact-card group flex items-start gap-3 rounded-2xl border border-espresso/8 bg-white/50 p-3 sm:p-4">
                       <ContactIcon type={item.icon} />
-                      <div className="min-w-0 text-left">
-                        <p className="text-[11px] font-medium tracking-[0.15em] text-mocha uppercase">
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="text-[10px] font-medium tracking-[0.15em] text-mocha uppercase sm:text-[11px]">
                           {item.label}
                         </p>
                         {item.href ? (
@@ -274,17 +282,17 @@ export function MaintenanceView({
                                 ? "noopener noreferrer"
                                 : undefined
                             }
-                            className="mt-0.5 block truncate text-sm font-medium text-espresso transition-colors duration-300 hover:text-gold-dark focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+                            className="mt-0.5 block break-words text-xs font-medium text-espresso transition-colors duration-300 hover:text-gold-dark focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:text-sm"
                             aria-label={`${item.label}: ${item.value}`}
                           >
                             {item.value}
                           </a>
                         ) : (
-                          <p className="mt-0.5 text-sm font-medium text-espresso">
+                          <p className="mt-0.5 break-words text-xs font-medium text-espresso sm:text-sm">
                             {item.value}
                           </p>
                         )}
-                        <p className="mt-1 text-xs leading-relaxed text-mocha">
+                        <p className="mt-1 text-[11px] leading-relaxed text-mocha sm:text-xs">
                           {item.subtitle}
                         </p>
                       </div>
@@ -297,8 +305,8 @@ export function MaintenanceView({
         </div>
       </main>
 
-      <footer className="relative z-10 border-t border-espresso/8 bg-cream/60 px-6 py-5 backdrop-blur-sm sm:py-6">
-        <div className="mx-auto flex w-full max-w-2xl flex-col items-center justify-between gap-4 text-center text-xs text-mocha sm:flex-row sm:text-left lg:max-w-6xl">
+      <footer className="relative z-10 border-t border-espresso/8 bg-cream/60 px-4 py-4 backdrop-blur-sm sm:px-6 sm:py-6">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center justify-between gap-3 text-center text-xs text-mocha sm:flex-row sm:text-left lg:max-w-6xl">
           <p>
             © {year} {config.name}. Tüm hakları saklıdır.
           </p>
@@ -325,3 +333,4 @@ export function MaintenanceView({
     </div>
   );
 }
+

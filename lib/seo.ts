@@ -57,7 +57,7 @@ export function buildOrganizationJsonLd(
 
   return {
     "@context": "https://schema.org",
-    "@type": ["ProfessionalService", "LocalBusiness"],
+    "@type": ["ProfessionalService", "LocalBusiness", "Photographer"],
     "@id": `${config.url}/#organization`,
     name: config.name,
     alternateName: config.author,
@@ -65,6 +65,7 @@ export function buildOrganizationJsonLd(
     url: config.url,
     image: absoluteUrl(config.logoImage, config.url),
     logo: absoluteUrl(config.logoImage, config.url),
+    priceRange: "$$",
     ...(telephone ? { telephone } : {}),
     areaServed: [
       {
