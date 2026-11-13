@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MaintenanceView } from "@/components/maintenance/MaintenanceView";
 import { getMaintenanceSettings } from "@/lib/maintenance";
 import { getSiteConfig, getSocialLinks } from "@/lib/settings";
+import { serializeJsonLd } from "@/lib/json-ld";
 import {
   absoluteUrl,
   buildOrganizationJsonLd,
@@ -62,7 +63,7 @@ export default async function MaintenancePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: serializeJsonLd({
             ...organization,
             description: PAGE_DESCRIPTION,
             email,

@@ -1,5 +1,6 @@
 "use server";
 
+import { isAdminUser } from "@/lib/admin-auth";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/validations";
@@ -32,7 +33,7 @@ async function authedClient() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/giris");
+  if (!user || !isAdminUser(user)) redirect("/admin/giris");
   return supabase;
 }
 

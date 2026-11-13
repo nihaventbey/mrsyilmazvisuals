@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld";
 import {
   buildOrganizationJsonLd,
   buildPersonJsonLd,
@@ -22,7 +23,7 @@ export async function JsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(payload) }}
     />
   );
 }

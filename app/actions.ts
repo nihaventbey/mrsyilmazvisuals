@@ -1,9 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { verifyAntiSpam } from "@/lib/anti-spam";
 import { sendNotificationEmail } from "@/lib/email";
 import { isMaintenanceActive } from "@/lib/maintenance";
 import { getBookableCategories } from "@/lib/portfolio-categories";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
 import {
   createPublicClient,
   isSupabaseConfigured,
@@ -23,6 +25,15 @@ export async function submitContact(
       status: "error",
       message:
         "Site şu anda bakım modunda. Lütfen daha sonra tekrar deneyin veya Instagram üzerinden bize ulaşın.",
+    };
+  }
+
+  const ip = getClientIpFromHeaders(await headers());
+  const rl = checkRateLimit(`contact:${ip}`, 5, 10 * 60_000);
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Çok fazla mesaj gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.",
     };
   }
 
@@ -97,6 +108,15 @@ export async function submitBooking(
       status: "error",
       message:
         "Site şu anda bakım modunda. Lütfen daha sonra tekrar deneyin veya Instagram üzerinden bize ulaşın.",
+    };
+  }
+
+  const ip = getClientIpFromHeaders(await headers());
+  const rl = checkRateLimit(`booking:${ip}`, 5, 10 * 60_000);
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Çok fazla rezervasyon talebi gönderildi. Lütfen birkaç dakika sonra tekrar deneyin.",
     };
   }
 

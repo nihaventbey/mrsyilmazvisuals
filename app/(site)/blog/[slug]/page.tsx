@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Placeholder } from "@/components/ui/Placeholder";
@@ -9,6 +10,7 @@ import {
   getBlogPost,
   getBlogPosts,
 } from "@/lib/content";
+import { serializeJsonLd } from "@/lib/json-ld";
 import { absoluteUrl, buildArticleJsonLd } from "@/lib/seo";
 import { getSiteConfig } from "@/lib/settings";
 
@@ -70,7 +72,7 @@ export default async function BlogPostPage({
     <article>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(articleLd) }}
       />
       <div className="container-page max-w-3xl pt-12">
         <Link
@@ -99,11 +101,24 @@ export default async function BlogPostPage({
       </div>
 
       <div className="container-page mt-10 max-w-4xl">
-        <Placeholder
-          index={2}
-          label={post.category}
-          className="aspect-[16/9] w-full"
-        />
+        {post.coverUrl ? (
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-sand/40">
+            <Image
+              src={post.coverUrl}
+              alt={post.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 896px"
+              priority
+            />
+          </div>
+        ) : (
+          <Placeholder
+            index={2}
+            label={post.category}
+            className="aspect-[16/9] w-full"
+          />
+        )}
       </div>
 
       <div className="container-page mt-12 max-w-3xl pb-8">

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminUser } from "@/lib/admin-auth";
 import { fetchMaintenanceEnabled } from "@/lib/maintenance";
 import {
   isMarkdownEligiblePath,
@@ -66,13 +67,19 @@ export async function proxy(request: NextRequest) {
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
-  let user: { id: string } | null = null;
+  let user: {
+    id: string;
+    email?: string | null;
+    app_metadata?: Record<string, unknown>;
+  } | null = null;
 
   if (supabaseConfigured) {
     const supabase = createSupabaseClient(request, response);
     const { data } = await supabase.auth.getUser();
     user = data.user;
   }
+
+  const isAdmin = isAdminUser(user);
 
   const maintenanceOn = await fetchMaintenanceEnabled();
 
@@ -120,13 +127,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // Refresh the session and gate the admin area.
-  if (isAdminRoute && !isLoginPage && !user) {
+  if (isAdminRoute && !isLoginPage && !isAdmin) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/giris";
     return NextResponse.redirect(url);
   }
 
-  if (isLoginPage && user) {
+  if (isLoginPage && isAdmin) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
     return NextResponse.redirect(url);

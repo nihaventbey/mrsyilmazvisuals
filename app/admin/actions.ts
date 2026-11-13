@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAdminUser } from "@/lib/admin-auth";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/lib/validations";
 
@@ -44,6 +47,15 @@ export async function signIn(
       status: "error",
       message:
         "Supabase henüz yapılandırılmamış. Lütfen .env.local dosyasına Supabase URL ve anahtarını ekleyin.",
+    };
+  }
+
+  const ip = getClientIpFromHeaders(await headers());
+  const rl = checkRateLimit(`admin-signin:${ip}`, 10, 15 * 60_000);
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Çok fazla giriş denemesi. Lütfen 15 dakika sonra tekrar deneyin.",
     };
   }
 
@@ -123,7 +135,7 @@ async function authedClient() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/giris");
+  if (!user || !isAdminUser(user)) redirect("/admin/giris");
   return supabase;
 }
 
@@ -1011,9 +1023,29 @@ export async function deleteCategory(formData: FormData): Promise<FormState> {
     return { status: "error", message: "Kategori bulunamadı." };
   }
 
+  // Collect image paths for this category (and direct children) before DB cascade delete.
+  const { data: childCats } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("parent_id", id);
+  const categoryIds = [id, ...(childCats ?? []).map((c) => c.id)];
+
+  const { data: categoryImages } = await supabase
+    .from("portfolio_images")
+    .select("image_path")
+    .in("category_id", categoryIds);
+
+  const storagePaths = (categoryImages ?? [])
+    .map((img) => img.image_path)
+    .filter((p): p is string => Boolean(p && !p.startsWith("http")));
+
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) {
     return { status: "error", message: `Silinemedi: ${error.message}` };
+  }
+
+  if (storagePaths.length > 0) {
+    await supabase.storage.from("portfolio").remove(storagePaths);
   }
 
   revalidateSite();
@@ -1220,6 +1252,35 @@ export async function reorderPortfolioImage(
 
   if (index < 0 || target < 0 || target >= list.length) {
     return { status: "success", message: "Görsel zaten sınırda." };
+  }
+
+  const currentRow = list[index];
+  const neighborRow = list[target];
+
+  // Fast path: when the two adjacent rows already have distinct sort_order values,
+  // swap only those 2 rows instead of updating the entire category.
+  if (
+    typeof currentRow.sort_order === "number" &&
+    typeof neighborRow.sort_order === "number" &&
+    currentRow.sort_order !== neighborRow.sort_order
+  ) {
+    const results = await Promise.all([
+      supabase
+        .from("portfolio_images")
+        .update({ sort_order: neighborRow.sort_order })
+        .eq("id", currentRow.id),
+      supabase
+        .from("portfolio_images")
+        .update({ sort_order: currentRow.sort_order })
+        .eq("id", neighborRow.id),
+    ]);
+    const failed = results.find((result) => result.error);
+    if (failed?.error) {
+      return { status: "error", message: `Taşınamadı: ${failed.error.message}` };
+    }
+    revalidateSite();
+    revalidatePath("/admin/portfolyo");
+    return { status: "success" };
   }
 
   [list[index], list[target]] = [list[target], list[index]];

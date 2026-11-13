@@ -39,9 +39,8 @@ async function verifyTurnstileToken(token: string): Promise<boolean> {
     const data = (await res.json()) as { success?: boolean };
     return data.success === true;
   } catch {
-    // Cloudflare unreachable: fail open so real visitors are not blocked;
-    // honeypot and timing checks have already passed at this point.
-    return true;
+    // Fail closed in production so network errors cannot bypass Turnstile.
+    return process.env.NODE_ENV !== "production";
   }
 }
 

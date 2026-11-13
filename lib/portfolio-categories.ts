@@ -221,7 +221,7 @@ export async function getPortfolioCategoryBySlug(
 
   const rows = await getCategoryRows();
   const row = rows.find((r) => r.slug === slug);
-  if (!row) return fallbackCategory(slug);
+  if (!row) return undefined;
 
   const summaries = buildSummaries(rows);
   const summary = summaries.find((s) => s.slug === slug)!;

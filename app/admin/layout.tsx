@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { isAdminUser } from "@/lib/admin-auth";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/public";
 import { getSiteConfig, getSiteSettings } from "@/lib/settings";
@@ -23,7 +24,7 @@ export default async function AdminLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || !isAdminUser(user)) {
     return <div className="min-h-screen">{children}</div>;
   }
 

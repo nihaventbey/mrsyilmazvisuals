@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Accordion } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { getFaq } from "@/lib/content";
+import { serializeJsonLd } from "@/lib/json-ld";
 import { buildFaqPageJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default async function FaqPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildFaqPageJsonLd(faq)),
+          __html: serializeJsonLd(buildFaqPageJsonLd(faq)),
         }}
       />
       <PageHeader

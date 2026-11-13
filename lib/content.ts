@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import sanitizeHtml from "sanitize-html";
 import portfolioData from "@/content/portfolio.json";
 import faqData from "@/content/faq.json";
 import {
@@ -48,11 +49,33 @@ export type BlogMeta = {
   date: string;
   category: string;
   readingTime: number;
+  coverUrl?: string | null;
 };
 
 export type BlogPost = BlogMeta & {
   html: string;
 };
+
+async function renderSafeMarkdown(markdown: string): Promise<string> {
+  const rawHtml = await marked.parse(markdown);
+  return sanitizeHtml(rawHtml, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      "img",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "figure",
+      "figcaption",
+    ]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ["src", "alt", "title", "width", "height", "loading"],
+      a: ["href", "name", "target", "rel"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+  });
+}
 
 function readingTimeOf(content: string): number {
   const words = content.trim().split(/\s+/).length;
@@ -180,7 +203,7 @@ export async function getBlogPosts(): Promise<BlogMeta[]> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("slug, title, excerpt, category, content, published_at")
+      .select("slug, title, excerpt, category, content, cover_path, published_at")
       .eq("published", true)
       .order("published_at", { ascending: false });
 
@@ -192,6 +215,7 @@ export async function getBlogPosts(): Promise<BlogMeta[]> {
         category: post.category,
         date: post.published_at ?? "",
         readingTime: readingTimeOf(post.content),
+        coverUrl: storagePublicUrl("site", post.cover_path),
       }));
     }
   }
@@ -206,7 +230,7 @@ export async function getBlogPost(
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("slug, title, excerpt, category, content, published_at")
+      .select("slug, title, excerpt, category, content, cover_path, published_at")
       .eq("published", true)
       .eq("slug", slug)
       .maybeSingle();
@@ -219,7 +243,8 @@ export async function getBlogPost(
         category: data.category,
         date: data.published_at ?? "",
         readingTime: readingTimeOf(data.content),
-        html: await marked.parse(data.content),
+        coverUrl: storagePublicUrl("site", data.cover_path),
+        html: await renderSafeMarkdown(data.content),
       };
     }
   }
@@ -256,10 +281,11 @@ function fallbackBlogPosts(): BlogMeta[] {
 }
 
 async function fallbackBlogPost(slug: string): Promise<BlogPost | undefined> {
+  if (!/^[a-z0-9-]+$/i.test(slug)) return undefined;
   const file = `${slug}.md`;
   if (!fs.existsSync(path.join(BLOG_DIR, file))) return undefined;
   const { content, ...meta } = readBlogFile(file);
-  return { ...meta, html: await marked.parse(content) };
+  return { ...meta, html: await renderSafeMarkdown(content) };
 }
 
 // ================================ misc =================================
